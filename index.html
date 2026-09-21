@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#e0e5ec">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="description" content="钉箱重量核算工具 - 支持圆帽/D帽、对口箱/飞机盒，附带天气时钟">
+    <title>钉箱重量核算工具 · 四重风格</title>
+    <style>
+        /* ===== 基础重置 & 全局 ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { -webkit-text-size-adjust: 100%; }
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: "Microsoft YaHei", "Inter", system-ui, -apple-system, sans-serif;
+            padding: 20px 10px;
+            transition: background 0.5s, color 0.5s;
+            -webkit-font-smoothing: antialiased;
+        }
+        .wrap {
+            width: 880px;
+            max-width: 96vw;
+            padding: 20px 18px;
+            border-radius: 32px;
+            transition: all 0.5s;
+        }
+
+        /* ===== 布局 ===== */
+        .main-row { display: flex; gap: 18px; align-items: stretch; }
+        .col-input-all { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+        .col-result-keypad { width: 320px; display: flex; flex-direction: column; gap: 12px; }
+        .animation-panel { margin-top: auto; }
+
+        /* ===== 天气时钟 ===== */
+        .weather-panel { padding: 12px; }
+        .wc-body { display: flex; align-items: center; gap: 12px; }
+        #weatherCanvas {
+            width: 80px; height: 80px; display: block; flex-shrink: 0;
+            border-radius: 12px; cursor: pointer;
+            image-rendering: pixelated; image-rendering: crisp-edges;
+            transition: transform 0.18s ease;
+            touch-action: manipulation;
+        }
+        #weatherCanvas:hover { transform: scale(1.05); }
+        #weatherCanvas:active { transform: scale(0.95); }
+        .wc-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+        .wc-time {
+            font-family: "Consolas", "SF Mono", "Courier New", monospace;
+            font-size: 25px; font-weight: 700; line-height: 1.05;
+            letter-spacing: 1px; font-variant-numeric: tabular-nums;
+        }
+        .wc-date { font-size: 12px; font-weight: 600; opacity: 0.72; letter-spacing: 0.4px; }
+        .wc-cond {
+            font-size: 12px; font-weight: 700; opacity: 0.92;
+            letter-spacing: 0.4px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .wc-cond.is-loading::after {
+            content: '';
+            display: inline-block;
+            width: 1em;
+            animation: dots 1.2s steps(4, end) infinite;
+        }
+        @keyframes dots {
+            0%   { content: ''; }
+            25%  { content: '·'; }
+            50%  { content: '··'; }
+            75%  { content: '···'; }
+            100% { content: ''; }
+        }
+
+        /* ===== 风格 1：新拟态 ===== */
+        body.style-neumo { background: #e0e5ec; color: #2d3436; }
+        body.style-neumo .wrap {
+            background: #e0e5ec;
+            box-shadow: 12px 12px 24px #b8bcc6, -12px -12px 24px #ffffff;
+            border-radius: 40px;
+        }
+        body.style-neumo .head-title {
+            color: #2d3436; font-weight: 700; font-size: 22px;
+            letter-spacing: 3px; text-align: center; margin-bottom: 14px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.05);
+        }
+        body.style-neumo .cyber-panel {
+            background: #e0e5ec; border-radius: 28px; padding: 16px 18px;
+            box-shadow: inset 6px 6px 12px #b8bcc6, inset -6px -6px 12px #ffffff;
+            border: none; transition: all 0.4s;
+        }
+        body.style-neumo .panel-tag {
+            font-size: 13px; font-weight: 600; color: #636e72;
+            margin-bottom: 12px; letter-spacing: 1px; text-transform: uppercase;
+        }
+        body.style-neumo .cyber-input {
+            background: #e0e5ec; border: none; border-radius: 20px;
+            padding: 10px 16px; font-size: 13px; font-weight: 500; color: #2d3436;
+            box-shadow: inset 4px 4px 8px #b8bcc6, inset -4px -4px 8px #ffffff;
+            transition: all 0.3s; width: 100%; outline: none;
+        }
+        body.style-neumo .cyber-input:focus {
+            box-shadow: inset 6px 6px 12px #b8bcc6, inset -6px -6px 12px #ffffff, 0 0 0 2px #74b9ff;
+        }
+        body.style-neumo .cyber-input:disabled { opacity: 0.5; }
+        body.style-neumo .unit-select {
+            background: #e0e5ec; border: none; border-radius: 16px;
+            padding: 8px 10px; font-size: 12px; color: #2d3436;
+            box-shadow: inset 3px 3px 6px #b8bcc6, inset -3px -3px 6px #ffffff;
+            outline: none; width: 62px;
+        }
+        body.style-neumo .cyber-btn {
+            background: #e0e5ec; border: none; border-radius: 20px;
+            padding: 9px 12px; font-size: 13px; font-weight: 600; color: #2d3436;
+            box-shadow: 5px 5px 12px #b8bcc6, -5px -5px 12px #ffffff;
+            cursor: pointer; transition: all 0.15s; text-align: center;
+            user-select: none;
+        }
+        body.style-neumo .cyber-btn.active {
+            box-shadow: inset 4px 4px 8px #b8bcc6, inset -4px -4px 8px #ffffff;
+            color: #0984e3;
+        }
+        body.style-neumo .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+        body.style-neumo .split-line {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #b8bcc6, transparent);
+            margin: 14px 0; border-radius: 4px;
+        }
+        body.style-neumo .nail-two-col,
+        body.style-neumo .pack-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+        body.style-neumo .form-item label {
+            font-size: 11px; color: #636e72; display: block;
+            margin-bottom: 4px; font-weight: 500; letter-spacing: 0.5px;
+        }
+        body.style-neumo .input-unit-row { display: flex; gap: 6px; }
+        body.style-neumo .result-box {
+            background: #e0e5ec; border-radius: 28px; padding: 16px 18px;
+            box-shadow: inset 4px 4px 10px #b8bcc6, inset -4px -4px 10px #ffffff;
+        }
+        body.style-neumo .result-row {
+            display: flex; justify-content: space-between;
+            padding: 6px 2px; font-size: 13px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        body.style-neumo .result-name { color: #636e72; }
+        body.style-neumo .result-value { color: #0984e3; font-weight: 700; font-size: 14px; }
+        body.style-neumo .total-row {
+            margin-top: 10px; padding-top: 10px;
+            border-top: 2px solid #0984e3;
+            display: flex; justify-content: space-between;
+        }
+        body.style-neumo .total-row .result-name { color: #0984e3; font-weight: 700; font-size: 16px; }
+        body.style-neumo .total-row .result-value { color: #e17055; font-size: 18px; }
+        body.style-neumo .keypad-grid {
+            display: grid; grid-template-columns: repeat(4,1fr);
+            gap: 10px; margin-bottom: 14px;
+        }
+        body.style-neumo .keypad-btn {
+            background: #e0e5ec; border: none; border-radius: 20px;
+            padding: 12px 0; font-size: 16px; font-weight: 700; color: #2d3436;
+            box-shadow: 5px 5px 12px #b8bcc6, -5px -5px 12px #ffffff;
+            cursor: pointer; transition: all 0.12s; text-align: center;
+            user-select: none;
+        }
+        body.style-neumo .keypad-btn:active {
+            box-shadow: inset 4px 4px 8px #b8bcc6, inset -4px -4px 8px #ffffff;
+            transform: scale(0.95);
+        }
+        body.style-neumo .keypad-btn.del { color: #e17055; }
+        body.style-neumo .keypad-btn.clear { color: #fdcb6e; }
+        body.style-neumo .keypad-btn.enter-key { color: #00b894; font-weight: 800; }
+        body.style-neumo .skin-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 4px; }
+        body.style-neumo .skin-btn {
+            background: #e0e5ec; border: none; border-radius: 20px;
+            padding: 10px 6px; font-size: 12px; font-weight: 600; color: #2d3436;
+            box-shadow: 4px 4px 10px #b8bcc6, -4px -4px 10px #ffffff;
+            cursor: pointer; transition: all 0.2s; text-align: center;
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            user-select: none;
+        }
+        body.style-neumo .skin-btn.active {
+            box-shadow: inset 4px 4px 8px #b8bcc6, inset -4px -4px 8px #ffffff;
+            color: #0984e3;
+        }
+        body.style-neumo .skin-preview-block {
+            width: 100%; height: 6px; border-radius: 10px;
+            background: #b8bcc6; transition: 0.3s;
+        }
+        body.style-neumo .skin-btn.active .skin-preview-block { background: #0984e3; }
+        body.style-neumo .error-box {
+            background: #fdf0ed; color: #e17055; padding: 8px 14px;
+            border-radius: 16px; margin-bottom: 10px; display: none;
+            font-size: 12px; font-weight: 500;
+        }
+
+        /* ===== 风格 2：复古98 ===== */
+        body.style-retro98 { background: #c0c0c0; color: #000; font-family: "Courier New", "Microsoft YaHei", monospace; }
+        body.style-retro98 .wrap {
+            background: #c0c0c0; border: 3px solid #fff;
+            border-color: #fff #808080 #808080 #fff;
+            border-radius: 0; box-shadow: none; padding: 16px;
+        }
+        body.style-retro98 .head-title {
+            font-size: 22px; font-weight: 700; letter-spacing: 4px;
+            color: #000; text-shadow: 2px 2px 0 #808080;
+            text-align: center; margin-bottom: 14px;
+        }
+        body.style-retro98 .cyber-panel {
+            background: #c0c0c0; border: 3px solid #fff;
+            border-color: #fff #808080 #808080 #fff;
+            border-radius: 0; padding: 14px 16px; margin-bottom: 8px;
+        }
+        body.style-retro98 .panel-tag {
+            font-size: 14px; font-weight: 700;
+            background: #000080; color: #fff;
+            padding: 3px 10px;
+            margin: -14px -16px 12px -16px;
+            letter-spacing: 1px;
+        }
+        body.style-retro98 .cyber-input {
+            background: #fff; border: 3px solid #808080;
+            border-color: #808080 #fff #fff #808080;
+            border-radius: 0; padding: 6px 10px;
+            font-size: 13px; font-weight: 400; color: #000;
+            width: 100%; outline: none; font-family: inherit;
+        }
+        body.style-retro98 .cyber-input:focus { border-color: #000080; }
+        body.style-retro98 .cyber-input:disabled { background: #e0e0e0; color: #808080; }
+        body.style-retro98 .unit-select {
+            background: #fff; border: 3px solid #808080;
+            border-color: #808080 #fff #fff #808080;
+            border-radius: 0; padding: 4px 6px; font-size: 12px;
+            color: #000; width: 62px; font-family: inherit;
+        }
+        body.style-retro98 .cyber-btn {
+            background: #c0c0c0; border: 3px solid #fff;
+            border-color: #fff #808080 #808080 #fff;
+            border-radius: 0; padding: 8px 12px;
+            font-size: 13px; font-weight: 700; color: #000;
+            cursor: pointer; text-align: center;
+            font-family: inherit; transition: none;
+            user-select: none;
+        }
+        body.style-retro98 .cyber-btn.active {
+            border-color: #808080 #fff #fff #808080;
+            background: #c0c0c0;
+        }
+        body.style-retro98 .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+        body.style-retro98 .split-line { height: 3px; background: #808080; margin: 12px 0; border: none; }
+        body.style-retro98 .nail-two-col,
+        body.style-retro98 .pack-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+        body.style-retro98 .form-item label {
+            font-size: 12px; color: #000; display: block;
+            margin-bottom: 3px; font-weight: 600;
+        }
+        body.style-retro98 .input-unit-row { display: flex; gap: 4px; }
+        body.style-retro98 .result-box {
+            background: #c0c0c0; border: 3px solid #808080;
+            border-color: #808080 #fff #fff #808080;
+            border-radius: 0; padding: 14px 16px;
+        }
+        body.style-retro98 .result-row {
+            display: flex; justify-content: space-between;
+            padding: 4px 2px; border-bottom: 1px dashed #808080;
+            font-size: 13px; font-family: inherit;
+        }
+        body.style-retro98 .result-name { color: #000; }
+        body.style-retro98 .result-value { color: #000; font-weight: 700; }
+        body.style-retro98 .total-row {
+            margin-top: 10px; padding-top: 10px;
+            border-top: 3px solid #000;
+            display: flex; justify-content: space-between;
+        }
+        body.style-retro98 .total-row .result-name { color: #000; font-weight: 700; font-size: 16px; }
+        body.style-retro98 .total-row .result-value { color: #000; font-size: 18px; font-weight: 900; }
+        body.style-retro98 .keypad-grid {
+            display: grid; grid-template-columns: repeat(4,1fr);
+            gap: 6px; margin-bottom: 12px;
+        }
+        body.style-retro98 .keypad-btn {
+            background: #c0c0c0; border: 3px solid #fff;
+            border-color: #fff #808080 #808080 #fff;
+            border-radius: 0; padding: 10px 0;
+            font-size: 16px; font-weight: 700; color: #000;
+            cursor: pointer; text-align: center; font-family: inherit;
+            user-select: none;
+        }
+        body.style-retro98 .keypad-btn:active { border-color: #808080 #fff #fff #808080; }
+        body.style-retro98 .keypad-btn.del,
+        body.style-retro98 .keypad-btn.clear { background: #c0c0c0; }
+        body.style-retro98 .keypad-btn.enter-key { background: #c0c0c0; font-weight: 900; }
+        body.style-retro98 .skin-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
+        body.style-retro98 .skin-btn {
+            background: #c0c0c0; border: 3px solid #fff;
+            border-color: #fff #808080 #808080 #fff;
+            border-radius: 0; padding: 8px 4px;
+            font-size: 11px; font-weight: 700; color: #000;
+            cursor: pointer; text-align: center; font-family: inherit;
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+            user-select: none;
+        }
+        body.style-retro98 .skin-btn.active { border-color: #808080 #fff #fff #808080; background: #d0d0d0; }
+        body.style-retro98 .skin-preview-block { width: 100%; height: 5px; background: #808080; }
+        body.style-retro98 .skin-btn.active .skin-preview-block { background: #000; }
+        body.style-retro98 .error-box {
+            background: #ffeeee; color: #c00;
+            border: 2px solid #c00; padding: 6px 12px;
+            margin-bottom: 10px; display: none;
+            font-size: 12px; font-weight: 600;
+        }
+
+        /* ===== 风格 3：粘土风 ===== */
+        body.style-clay {
+            background: #fdf6f0; color: #4a3728;
+            font-family: "Quicksand", "Microsoft YaHei", system-ui, sans-serif;
+        }
+        body.style-clay .wrap {
+            background: #fdf6f0; border-radius: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.10), 0 8px 16px rgba(0,0,0,0.06);
+            padding: 20px 18px; border: none;
+        }
+        body.style-clay .head-title {
+            font-size: 22px; font-weight: 800; color: #4a3728;
+            text-align: center; margin-bottom: 14px;
+            letter-spacing: 2px; text-shadow: 0 4px 0 #e8d5c4;
+        }
+        body.style-clay .cyber-panel {
+            background: #fdf6f0; border-radius: 28px; padding: 16px 18px;
+            box-shadow: 0 12px 0 #dccfc4, 0 16px 32px rgba(0,0,0,0.10);
+            border: none; transition: all 0.3s;
+        }
+        body.style-clay .panel-tag {
+            font-size: 13px; font-weight: 700; color: #4a3728;
+            margin-bottom: 12px; letter-spacing: 1px;
+            background: #ffefe4; display: inline-block;
+            padding: 4px 18px; border-radius: 40px;
+            box-shadow: inset 0 -3px 0 #dccfc4;
+        }
+        body.style-clay .cyber-input {
+            background: #ffffff; border: 2px solid #dccfc4;
+            border-radius: 20px; padding: 10px 16px;
+            font-size: 13px; font-weight: 600; color: #4a3728;
+            width: 100%; outline: none;
+            box-shadow: 0 8px 0 #b8a898, inset 0 2px 8px rgba(0,0,0,0.06);
+            transition: all 0.15s; font-family: inherit;
+        }
+        body.style-clay .cyber-input:focus {
+            border-color: #6b8c5c;
+            box-shadow: 0 8px 0 #8aaf7a, inset 0 2px 8px rgba(0,0,0,0.06);
+        }
+        body.style-clay .cyber-input:disabled { opacity: 0.5; box-shadow: 0 4px 0 #b8a898; }
+        body.style-clay .unit-select {
+            background: #ffffff; border: 2px solid #dccfc4;
+            border-radius: 16px; padding: 8px 10px;
+            font-size: 12px; font-weight: 600; color: #4a3728;
+            width: 62px; box-shadow: 0 8px 0 #b8a898;
+            outline: none; font-family: inherit;
+        }
+        body.style-clay .cyber-btn {
+            background: #ffefe4; border: none; border-radius: 20px;
+            padding: 9px 12px; font-size: 13px; font-weight: 700; color: #4a3728;
+            cursor: pointer; box-shadow: 0 8px 0 #dccfc4;
+            transition: all 0.08s linear; text-align: center;
+            font-family: inherit; user-select: none;
+        }
+        body.style-clay .cyber-btn:active { transform: translateY(4px); box-shadow: 0 4px 0 #dccfc4; }
+        body.style-clay .cyber-btn.active { background: #6b8c5c; color: #fff; box-shadow: 0 8px 0 #4a6a3a; }
+        body.style-clay .cyber-btn.active:active { transform: translateY(4px); box-shadow: 0 4px 0 #4a6a3a; }
+        body.style-clay .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+        body.style-clay .split-line {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #e8d5c4, transparent);
+            margin: 14px 0; border-radius: 4px;
+        }
+        body.style-clay .nail-two-col,
+        body.style-clay .pack-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+        body.style-clay .form-item label {
+            font-size: 11px; font-weight: 700; color: #4a3728;
+            display: block; margin-bottom: 4px; letter-spacing: 0.5px;
+        }
+        body.style-clay .input-unit-row { display: flex; gap: 6px; }
+        body.style-clay .result-box {
+            background: #fdf6f0; border-radius: 28px; padding: 16px 18px;
+            box-shadow: 0 12px 0 #dccfc4, 0 16px 32px rgba(0,0,0,0.08);
+            border: none;
+        }
+        body.style-clay .result-row {
+            display: flex; justify-content: space-between;
+            padding: 6px 2px; font-size: 13px; font-weight: 600;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        body.style-clay .result-name { color: #8a7a6a; }
+        body.style-clay .result-value { color: #6b8c5c; font-weight: 800; font-size: 14px; }
+        body.style-clay .total-row {
+            margin-top: 10px; padding-top: 10px;
+            border-top: 2px solid #d4746a;
+            display: flex; justify-content: space-between;
+        }
+        body.style-clay .total-row .result-name { color: #d4746a; font-weight: 800; font-size: 16px; }
+        body.style-clay .total-row .result-value { color: #d4746a; font-size: 18px; font-weight: 900; }
+        body.style-clay .keypad-grid {
+            display: grid; grid-template-columns: repeat(4,1fr);
+            gap: 10px; margin-bottom: 14px;
+        }
+        body.style-clay .keypad-btn {
+            background: #ffefe4; border: none; border-radius: 20px;
+            padding: 12px 0; font-size: 16px; font-weight: 800; color: #4a3728;
+            cursor: pointer; box-shadow: 0 8px 0 #dccfc4;
+            transition: all 0.06s linear; text-align: center;
+            font-family: inherit; user-select: none;
+        }
+        body.style-clay .keypad-btn:active { transform: translateY(4px); box-shadow: 0 4px 0 #dccfc4; }
+        body.style-clay .keypad-btn.del { background: #f5d4c8; box-shadow: 0 8px 0 #c8b0a4; color: #8a5a4a; }
+        body.style-clay .keypad-btn.clear { background: #f5e4b8; box-shadow: 0 8px 0 #c8b48c; color: #8a7a3a; }
+        body.style-clay .keypad-btn.enter-key { background: #a8c8a0; box-shadow: 0 8px 0 #6a9060; color: #fff; }
+        body.style-clay .skin-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+        body.style-clay .skin-btn {
+            background: #ffefe4; border: none; border-radius: 20px;
+            padding: 10px 6px; font-size: 12px; font-weight: 700; color: #4a3728;
+            cursor: pointer; box-shadow: 0 8px 0 #dccfc4;
+            transition: all 0.06s linear; text-align: center;
+            font-family: inherit; display: flex; flex-direction: column;
+            align-items: center; gap: 4px; user-select: none;
+        }
+        body.style-clay .skin-btn.active { background: #6b8c5c; color: #fff; box-shadow: 0 8px 0 #4a6a3a; }
+        body.style-clay .skin-btn.active .skin-preview-block { background: #fff; }
+        body.style-clay .skin-preview-block { width: 100%; height: 6px; border-radius: 10px; background: #dccfc4; }
+        body.style-clay .error-box {
+            background: #fdf0ed; color: #d4746a; border: none;
+            border-radius: 16px; padding: 8px 14px;
+            margin-bottom: 10px; display: none;
+            font-size: 12px; font-weight: 700;
+        }
+
+        /* ===== 风格 4：极简商务 ===== */
+        body.style-minimal { background: #f5f7fa; color: #1a2332; font-family: "Inter", "Microsoft YaHei", system-ui, sans-serif; }
+        body.style-minimal .wrap {
+            background: #ffffff; border-radius: 24px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.03);
+            padding: 28px 30px;
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+        body.style-minimal .head-title {
+            font-size: 20px; font-weight: 600; color: #1a2332;
+            text-align: center; margin-bottom: 18px; letter-spacing: 3px;
+        }
+        body.style-minimal .cyber-panel {
+            background: #ffffff; border-radius: 16px;
+            padding: 16px 18px;
+            border: 1px solid #e9edf2;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            transition: all 0.3s;
+        }
+        body.style-minimal .panel-tag {
+            font-size: 12px; font-weight: 600; color: #4a5a6a;
+            margin-bottom: 14px; letter-spacing: 1.5px;
+            text-transform: uppercase;
+            border-bottom: 2px solid #e9edf2;
+            padding-bottom: 8px;
+        }
+        body.style-minimal .cyber-input {
+            background: #f5f7fa; border: 1.5px solid #dce0e6;
+            border-radius: 10px; padding: 10px 14px;
+            font-size: 13px; font-weight: 500; color: #1a2332;
+            width: 100%; outline: none;
+            transition: all 0.2s; font-family: inherit;
+        }
+        body.style-minimal .cyber-input:focus {
+            border-color: #2d6a4f;
+            box-shadow: 0 0 0 3px rgba(45,106,79,0.10);
+            background: #ffffff;
+        }
+        body.style-minimal .cyber-input:disabled { background: #f0f2f5; color: #8a9aa8; border-color: #e0e4e8; }
+        body.style-minimal .unit-select {
+            background: #f5f7fa; border: 1.5px solid #dce0e6;
+            border-radius: 10px; padding: 6px 10px;
+            font-size: 12px; font-weight: 500; color: #1a2332;
+            width: 62px; outline: none; font-family: inherit;
+            transition: all 0.2s;
+        }
+        body.style-minimal .cyber-btn {
+            background: #f5f7fa; border: 1.5px solid #dce0e6;
+            border-radius: 12px; padding: 8px 14px;
+            font-size: 13px; font-weight: 600; color: #1a2332;
+            cursor: pointer; transition: all 0.2s;
+            text-align: center; font-family: inherit;
+            user-select: none;
+        }
+        body.style-minimal .cyber-btn.active { background: #2d6a4f; color: #fff; border-color: #2d6a4f; }
+        body.style-minimal .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+        body.style-minimal .split-line { height: 1px; background: #e9edf2; margin: 14px 0; }
+        body.style-minimal .nail-two-col,
+        body.style-minimal .pack-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+        body.style-minimal .form-item label {
+            font-size: 11px; font-weight: 600; color: #4a5a6a;
+            display: block; margin-bottom: 4px; letter-spacing: 0.3px;
+        }
+        body.style-minimal .input-unit-row { display: flex; gap: 6px; }
+        body.style-minimal .result-box {
+            background: #fafbfc; border-radius: 16px;
+            padding: 16px 18px; border: 1px solid #e9edf2;
+        }
+        body.style-minimal .result-row {
+            display: flex; justify-content: space-between;
+            padding: 6px 2px; border-bottom: 1px solid #edf0f5;
+            font-size: 13px;
+        }
+        body.style-minimal .result-name { color: #6a7a8a; font-weight: 500; }
+        body.style-minimal .result-value { color: #1a2332; font-weight: 700; }
+        body.style-minimal .total-row {
+            margin-top: 10px; padding-top: 10px;
+            border-top: 2px solid #2d6a4f;
+            display: flex; justify-content: space-between;
+        }
+        body.style-minimal .total-row .result-name { color: #2d6a4f; font-weight: 700; font-size: 15px; }
+        body.style-minimal .total-row .result-value { color: #d62828; font-size: 17px; font-weight: 800; }
+        body.style-minimal .keypad-grid {
+            display: grid; grid-template-columns: repeat(4,1fr);
+            gap: 8px; margin-bottom: 14px;
+        }
+        body.style-minimal .keypad-btn {
+            background: #f5f7fa; border: 1.5px solid #dce0e6;
+            border-radius: 12px; padding: 11px 0;
+            font-size: 15px; font-weight: 600; color: #1a2332;
+            cursor: pointer; transition: all 0.15s;
+            text-align: center; font-family: inherit;
+            user-select: none;
+        }
+        body.style-minimal .keypad-btn:active { transform: scale(0.96); }
+        body.style-minimal .keypad-btn.del { color: #d62828; border-color: #f5d0d0; }
+        body.style-minimal .keypad-btn.clear { color: #f09b22; border-color: #f5e0c0; }
+        body.style-minimal .keypad-btn.enter-key { background: #2d6a4f; color: #fff; border-color: #2d6a4f; }
+        body.style-minimal .skin-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+        body.style-minimal .skin-btn {
+            background: #f5f7fa; border: 1.5px solid #dce0e6;
+            border-radius: 12px; padding: 8px 6px;
+            font-size: 11px; font-weight: 600; color: #1a2332;
+            cursor: pointer; transition: all 0.2s;
+            text-align: center; display: flex;
+            flex-direction: column; align-items: center;
+            gap: 4px; font-family: inherit;
+            user-select: none;
+        }
+        body.style-minimal .skin-btn.active { background: #2d6a4f; color: #fff; border-color: #2d6a4f; }
+        body.style-minimal .skin-btn.active .skin-preview-block { background: #fff; }
+        body.style-minimal .skin-preview-block {
+            width: 100%; height: 4px; border-radius: 4px;
+            background: #dce0e6; transition: 0.2s;
+        }
+        body.style-minimal .error-box {
+            background: #fde8e8; color: #d62828;
+            border: 1.5px solid #f5d0d0; border-radius: 10px;
+            padding: 8px 14px; margin-bottom: 10px;
+            display: none; font-size: 12px; font-weight: 500;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 780px) {
+            .main-row { flex-direction: column !important; }
+            .col-result-keypad { width: 100% !important; }
+            .nail-two-col, .pack-two-col { grid-template-columns: 1fr !important; }
+            .wrap { padding: 14px !important; }
+            .skin-bar { grid-template-columns: repeat(2, 1fr) !important; }
+            .btn-group { grid-template-columns: 1fr 1fr !important; }
+        }
+        @media (max-width: 480px) {
+            .head-title { font-size: 16px !important; }
+            .keypad-grid { gap: 6px !important; }
+            .keypad-btn { padding: 10px 0 !important; font-size: 14px !important; }
+            .wc-time { font-size: 21px !important; }
+            #weatherCanvas { width: 68px !important; height: 68px !important; }
+        }
+    </style>
+</head>
+<body class="style-neumo">
+    <div class="wrap">
+        <!-- 标题 -->
+        <div class="head-title">
+            <span class="green">NAIL WEIGHT</span>
+            <span class="red">CALCULATOR</span>
+        </div>
+
+        <div class="main-row">
+            <!-- 左列：输入 -->
+            <div class="col-input-all" id="inputWrap">
+                <!-- 钉子参数 -->
+                <div class="cyber-panel">
+                    <div class="panel-tag">① 钉子参数</div>
+                    <div class="btn-group" data-group="cap">
+                        <div class="cyber-btn active" data-type="round">圆帽</div>
+                        <div class="cyber-btn" data-type="bow">D帽</div>
+                    </div>
+                    <div class="nail-two-col">
+                        <div class="form-item"><label>线径 mm</label><input class="cyber-input" id="dBase" type="text" inputmode="decimal" tabindex="1"></div>
+                        <div class="form-item"><label>总长 mm</label><input class="cyber-input" id="L" type="text" inputmode="decimal" tabindex="2"></div>
+                        <div class="form-item"><label>帽径 mm</label><input class="cyber-input" id="Dcap" type="text" inputmode="decimal" tabindex="3"></div>
+                        <div class="form-item"><label>帽厚 mm</label><input class="cyber-input" id="tCap" type="text" inputmode="decimal" tabindex="4"></div>
+                        <div class="form-item"><label>半帽厚 mm</label><input class="cyber-input" id="bowH" disabled type="text" inputmode="decimal" tabindex="5"></div>
+                        <div class="form-item"><label>顶角 °</label><input class="cyber-input" id="tipAngle" type="text" inputmode="decimal" tabindex="6"></div>
+                        <div class="form-item"><label>钢密度</label><input class="cyber-input" id="densitySteel" value="7.85" type="text" inputmode="decimal" tabindex="7"></div>
+                        <div class="form-item"><label>每箱支数</label><input class="cyber-input" id="quantityBox" type="text" inputmode="numeric" tabindex="8"></div>
+                        <div class="form-item"><label>锌密度</label><input class="cyber-input" id="densityZn" value="7.14" type="text" inputmode="decimal" tabindex="9"></div>
+                        <div class="form-item"><label>镀层 μm</label><input class="cyber-input" id="plateThick" value="0" type="text" inputmode="decimal" tabindex="10"></div>
+                    </div>
+                </div>
+
+                <div class="split-line"></div>
+
+                <!-- 纸箱 & 焊丝 & 卷钉 -->
+                <div class="cyber-panel">
+                    <div class="panel-tag">② 纸箱 &amp; 焊丝 &amp; 卷钉</div>
+                    <div class="btn-group" data-group="box">
+                        <div class="cyber-btn active" data-type="regular">对口箱</div>
+                        <div class="cyber-btn" data-type="airplane">0427手提飞机盒</div>
+                    </div>
+                    <div class="pack-two-col">
+                        <div class="form-item"><label>钉距 / 焊位 mm</label><input class="cyber-input" id="wirePitch" type="text" inputmode="decimal" tabindex="11"></div>
+                        <div class="form-item">
+                            <label>纸箱长</label>
+                            <div class="input-unit-row">
+                                <input class="cyber-input" id="boxL" type="text" inputmode="decimal" tabindex="12">
+                                <select class="unit-select" id="unitL">
+                                    <option value="10">cm</option>
+                                    <option value="1">mm</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-item"><label>焊丝线径 mm</label><input class="cyber-input" id="wireD" value="0.7" type="text" inputmode="decimal" tabindex="13"></div>
+                        <div class="form-item">
+                            <label>纸箱宽</label>
+                            <div class="input-unit-row">
+                                <input class="cyber-input" id="boxW" type="text" inputmode="decimal" tabindex="14">
+                                <select class="unit-select" id="unitW">
+                                    <option value="10">cm</option>
+                                    <option value="1">mm</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-item"><label>卷轴直径 mm</label><input class="cyber-input" id="reelD" type="text" inputmode="decimal" tabindex="15"></div>
+                        <div class="form-item">
+                            <label>纸箱高</label>
+                            <div class="input-unit-row">
+                                <input class="cyber-input" id="boxH" type="text" inputmode="decimal" tabindex="16">
+                                <select class="unit-select" id="unitH">
+                                    <option value="10">cm</option>
+                                    <option value="1">mm</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-item"><label>每卷支数</label><input class="cyber-input" id="qtyRoll" type="text" inputmode="numeric" tabindex="17"></div>
+                        <div class="form-item"><label>纸板 g/㎡</label><input class="cyber-input" id="boxGram" value="550" type="text" inputmode="decimal" tabindex="18"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右列：结果 + 键盘 + 皮肤 + 天气 -->
+            <div class="col-result-keypad">
+                <div class="cyber-panel result-box">
+                    <div class="panel-tag">③ 核算结果</div>
+                    <div class="error-box" id="errorBox"></div>
+                    <div class="result-row"><span class="result-name">单支基材</span><span class="result-value" id="singleSteel">-- g</span></div>
+                    <div class="result-row"><span class="result-name">整箱基材</span><span class="result-value" id="boxSteelKg">-- kg</span></div>
+                    <div class="result-row"><span class="result-name">箱锌层重</span><span class="result-value" id="boxZnKg">-- kg</span></div>
+                    <div class="result-row"><span class="result-name">整箱钉子</span><span class="result-value" id="boxNailKg">-- kg</span></div>
+                    <div class="result-row"><span class="result-name">焊丝总重</span><span class="result-value" id="wireKg">-- kg</span></div>
+                    <div class="result-row"><span class="result-name">纸箱自重</span><span class="result-value" id="boxKg">-- kg</span></div>
+                    <div class="result-row"><span class="result-name">卷钉外径</span><span class="result-value" id="rollOuterDia">-- mm</span></div>
+                    <div class="total-row"><span class="result-name">出货总重:</span><span class="result-value" id="finalTotal">-- kg</span></div>
+                </div>
+
+                <div class="cyber-panel">
+                    <div class="panel-tag">④ 数字按键</div>
+                    <div class="keypad-grid">
+                        <div class="keypad-btn" data-key="7">7</div>
+                        <div class="keypad-btn" data-key="8">8</div>
+                        <div class="keypad-btn" data-key="9">9</div>
+                        <div class="keypad-btn del" data-key="del">⌫</div>
+                        <div class="keypad-btn" data-key="4">4</div>
+                        <div class="keypad-btn" data-key="5">5</div>
+                        <div class="keypad-btn" data-key="6">6</div>
+                        <div class="keypad-btn clear" data-key="clear">✕</div>
+                        <div class="keypad-btn" data-key="1">1</div>
+                        <div class="keypad-btn" data-key="2">2</div>
+                        <div class="keypad-btn" data-key="3">3</div>
+                        <div class="keypad-btn enter-key" data-key="enter">↵</div>
+                        <div class="keypad-btn" data-key="00">00</div>
+                        <div class="keypad-btn" data-key="0">0</div>
+                        <div class="keypad-btn" data-key=".">.</div>
+                    </div>
+
+                    <div class="panel-tag" style="margin-top:6px;">🎨 风格切换</div>
+                    <div class="skin-bar">
+                        <div class="skin-btn active" data-skin="style-neumo"><span class="skin-preview-block"></span>新拟态</div>
+                        <div class="skin-btn" data-skin="style-retro98"><span class="skin-preview-block"></span>复古98</div>
+                        <div class="skin-btn" data-skin="style-clay"><span class="skin-preview-block"></span>粘土风</div>
+                        <div class="skin-btn" data-skin="style-minimal"><span class="skin-preview-block"></span>极简商务</div>
+                    </div>
+                </div>
+
+                <!-- 天气时钟 -->
+                <div class="cyber-panel animation-panel weather-panel">
+                    <div class="panel-tag" style="margin-bottom: 8px;">🕐 天气时钟</div>
+                    <div class="wc-body">
+                        <canvas id="weatherCanvas" width="80" height="80" title="点击切换天气"></canvas>
+                        <div class="wc-info">
+                            <div class="wc-time" id="wcTime">--:--:--</div>
+                            <div class="wc-date" id="wcDate">--</div>
+                            <div class="wc-cond is-loading" id="wcCond">初始化</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* =====================================================
+           ① 计算器核心逻辑
+           ===================================================== */
+        (function() {
+            let activeInput = null;
+            let capType = 'round';
+            let boxType = 'regular';
+            const bowH = document.getElementById('bowH');
+            const allInputsList = Array.from(document.querySelectorAll('.cyber-input:not([disabled])'));
+
+            ['unitL','unitW','unitH'].forEach(id => {
+                document.getElementById(id).addEventListener('change', calcAll);
+            });
+
+            // 切换按钮
+            document.getElementById('inputWrap').addEventListener('click', function(e) {
+                const target = e.target;
+                if (!target.classList.contains('cyber-btn')) return;
+                const group = target.closest('.btn-group');
+                if (!group) return;
+                group.querySelectorAll('.cyber-btn').forEach(b => b.classList.remove('active'));
+                target.classList.add('active');
+                const type = target.dataset.type;
+                const key = group.dataset.group;
+                if (key === 'cap') {
+                    capType = type;
+                    if (capType === 'bow') bowH.disabled = false;
+                    else { bowH.disabled = true; bowH.value = ''; }
+                } else if (key === 'box') {
+                    boxType = type;
+                }
+                calcAll();
+            });
+
+            // 输入框事件
+            allInputsList.forEach(inp => {
+                inp.addEventListener('focus', () => activeInput = inp);
+                inp.addEventListener('input', calcAll);
+                inp.addEventListener('keydown', e => { if (e.key === 'Enter') doEnterFunc(); });
+            });
+
+            // 数字键盘
+            document.querySelectorAll('.keypad-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (!activeInput) return;
+                    const key = this.dataset.key;
+                    const val = activeInput.value;
+                    if (key === 'clear') { activeInput.value = ''; calcAll(); return; }
+                    if (key === 'del') { activeInput.value = val.slice(0, -1); calcAll(); return; }
+                    if (key === 'enter') { doEnterFunc(); return; }
+                    if (key === '.') { if (val.indexOf('.') !== -1) return; activeInput.value = val + '.'; calcAll(); return; }
+                    if (key === '00') { activeInput.value = val + '00'; calcAll(); return; }
+                    activeInput.value = val + key;
+                    calcAll();
+                });
+            });
+
+            function doEnterFunc() {
+                calcAll();
+                if (!activeInput) return;
+                const idx = allInputsList.indexOf(activeInput);
+                const nextIdx = (idx + 1) % allInputsList.length;
+                allInputsList[nextIdx].focus();
+            }
+
+            // 皮肤切换
+            const skinBtns = document.querySelectorAll('.skin-btn');
+            skinBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    skinBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.body.className = btn.dataset.skin;
+                });
+            });
+
+            // DOM 引用
+            const $ = id => document.getElementById(id);
+            const dBaseIn = $('dBase'), LIn = $('L'), DcapIn = $('Dcap'), tCapIn = $('tCap');
+            const bowHIn = $('bowH'), tipIn = $('tipAngle'), steelRhoIn = $('densitySteel');
+            const qtyIn = $('quantityBox'), plateIn = $('plateThick'), zincRhoIn = $('densityZn');
+            const wirePitchIn = $('wirePitch'), wireDIn = $('wireD');
+            const boxLIn = $('boxL'), boxWIn = $('boxW'), boxHIn = $('boxH');
+            const boxGramIn = $('boxGram'), reelDIn = $('reelD'), qtyRollIn = $('qtyRoll');
+            const unitL = $('unitL'), unitW = $('unitW'), unitH = $('unitH');
+            const errBox = $('errorBox');
+            const singleSteel = $('singleSteel'), boxSteel = $('boxSteelKg'), boxZn = $('boxZnKg');
+            const boxNail = $('boxNailKg'), wireW = $('wireKg'), boxWt = $('boxKg');
+            const rollOuterDia = $('rollOuterDia'), totalAll = $('finalTotal');
+
+            // 计算函数
+            function calcBoxWeight() {
+                const rawL = parseFloat(boxLIn.value), rawW = parseFloat(boxWIn.value);
+                const rawH = parseFloat(boxHIn.value), gram = parseFloat(boxGramIn.value);
+                const bL = rawL * Number(unitL.value), bW = rawW * Number(unitW.value), bH = rawH * Number(unitH.value);
+                if (!(bL > 0 && bW > 0 && bH > 0 && gram > 0)) return null;
+                let cutLong, cutWide;
+                if (boxType === 'regular') {
+                    cutLong = (bL + bW) * 2 + 40;
+                    cutWide = bW + bH * 2;
+                    return (cutLong * cutWide) / 1e6 * gram / 1000;
+                } else {
+                    cutLong = bW + bH * 2;
+                    cutWide = bL * 2 + bH * 2;
+                    return (cutLong * cutWide) / 1e6 * gram / 1000 * 1.15;
+                }
+            }
+
+            function calcWireWeight() {
+                const qty = parseInt(qtyIn.value), wireP = parseFloat(wirePitchIn.value), wireDia = parseFloat(wireDIn.value);
+                if (!(qty >= 2 && wireP > 0 && wireDia > 0)) return null;
+                return 0.00617 * wireDia * wireDia * ((qty - 1) * wireP / 1000) * 2;
+            }
+
+            function calcNailWeight() {
+                const dBase = parseFloat(dBaseIn.value), L = parseFloat(LIn.value);
+                const Dcap = parseFloat(DcapIn.value), tCap = parseFloat(tCapIn.value);
+                const bowHVal = parseFloat(bowHIn.value), tipAng = parseFloat(tipIn.value);
+                const rhoS = parseFloat(steelRhoIn.value), qty = parseInt(qtyIn.value);
+                const plateU = parseFloat(plateIn.value), rhoZn = parseFloat(zincRhoIn.value);
+
+                if ([dBase, L, Dcap, tCap, tipAng, rhoS, qty].some(isNaN)) return null;
+                if (dBase <= 0 || L <= 0 || Dcap <= 0 || tCap <= 0 || rhoS <= 0 || qty < 1 || tipAng <= 0 || tipAng >= 180) return null;
+                if (plateU < 0 || rhoZn <= 0) return null;
+                if (capType === 'bow' && (isNaN(bowHVal) || bowHVal <= 0 || bowHVal >= Dcap)) return null;
+
+                const r = dBase / 2, halfRad = tipAng * Math.PI / 360;
+                const hTip = r / Math.tan(halfRad), LShank = L - tCap - hTip;
+                if (LShank <= 0) return null;
+
+                let Vcap;
+                const Rcap = Dcap / 2;
+                if (capType === 'round') Vcap = Math.PI * Rcap ** 2 * tCap;
+                else {
+                    const h = bowHVal;
+                    const t1 = Rcap * Rcap * Math.acos((Rcap - h) / Rcap);
+                    const t2 = (Rcap - h) * Math.sqrt(2 * Rcap * h - h * h);
+                    Vcap = (t1 - t2) * tCap;
+                }
+                const Vshank = Math.PI * r ** 2 * LShank;
+                const Vtip = Math.PI * r ** 2 * hTip / 3;
+                const steelG = (Vcap + Vshank + Vtip) * rhoS / 1000;
+                const boxSteelKg = steelG * qty / 1000;
+
+                let boxZnKg = 0;
+                if (plateU > 0) {
+                    const add = plateU / 1000, r2 = r + add;
+                    const Vs = Math.PI * (r2 ** 2 - r ** 2) * LShank;
+                    const ht2 = r2 / Math.tan(halfRad);
+                    const Vt = Math.PI * (r2 ** 2 - r ** 2) * ht2 / 3;
+                    boxZnKg = (Vs + Vt) * rhoZn / 1000 * qty / 1000;
+                }
+                return { steelG, boxSteelKg, boxZnKg, boxNailKg: boxSteelKg + boxZnKg };
+            }
+
+            function calcRollOuterDiameter() {
+                const d = parseFloat(dBaseIn.value), N = parseInt(qtyRollIn.value);
+                const p = parseFloat(wirePitchIn.value), s = parseFloat(wireDIn.value), D0 = parseFloat(reelDIn.value);
+                if (!(d > 0 && N > 0 && p > 0 && s > 0 && D0 > 0)) return null;
+                const eta = 1.1465 - 0.1378 * d;
+                if (eta <= 0) return null;
+                const inner = D0 * D0 + 4 * N * p * (d + s) / (Math.PI * eta);
+                return inner <= 0 ? null : Math.sqrt(inner);
+            }
+
+            function calcAll() {
+                errBox.style.display = 'none';
+                const boxKgNum = calcBoxWeight();
+                boxWt.textContent = boxKgNum === null ? "-- kg" : boxKgNum.toFixed(3) + " kg";
+
+                const wireKgNum = calcWireWeight();
+                wireW.textContent = wireKgNum === null ? "-- kg" : wireKgNum.toFixed(4) + " kg";
+
+                const nailData = calcNailWeight();
+                if (nailData === null) {
+                    singleSteel.textContent = "-- g";
+                    boxSteel.textContent = "-- kg";
+                    boxZn.textContent = "-- kg";
+                    boxNail.textContent = "-- kg";
+                } else {
+                    singleSteel.textContent = nailData.steelG.toFixed(3) + " g";
+                    boxSteel.textContent = nailData.boxSteelKg.toFixed(3) + " kg";
+                    boxZn.textContent = nailData.boxZnKg.toFixed(3) + " kg";
+                    boxNail.textContent = nailData.boxNailKg.toFixed(3) + " kg";
+                }
+
+                const rollDia = calcRollOuterDiameter();
+                rollOuterDia.textContent = rollDia === null ? "-- mm" : rollDia.toFixed(1) + " mm";
+
+                const hasNail = nailData !== null, hasWire = wireKgNum !== null, hasBox = boxKgNum !== null;
+                let totalVal = null;
+                if (capType === 'round') {
+                    if (hasNail && hasWire && hasBox) totalVal = nailData.boxNailKg + wireKgNum + boxKgNum;
+                } else {
+                    if (hasNail && hasBox) totalVal = nailData.boxNailKg + boxKgNum;
+                }
+                totalAll.textContent = totalVal === null ? "-- kg" : totalVal.toFixed(3) + " kg";
+            }
+
+            calcAll();
+            bowH.disabled = true;
+            bowH.value = '';
+        })();
+
+        /* =====================================================
+           ② 天气时钟（自动定位 + 缓存优化）
+           ===================================================== */
+        (function() {
+            const canvas = document.getElementById('weatherCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const wcTimeEl = document.getElementById('wcTime');
+            const wcDateEl = document.getElementById('wcDate');
+            const wcCondEl = document.getElementById('wcCond');
+
+            const S = 2, W = 40, H = 40;
+
+            // ---------- 像素绘制 ----------
+            function px(x, y, w, h, color) {
+                ctx.fillStyle = color;
+                ctx.fillRect(x * S, y * S, w * S, h * S);
+            }
+            function circle(cx, cy, r, color) {
+                ctx.fillStyle = color;
+                for (let dy = -r; dy <= r; dy++)
+                    for (let dx = -r; dx <= r; dx++)
+                        if (dx * dx + dy * dy <= r * r) ctx.fillRect((cx + dx) * S, (cy + dy) * S, S, S);
+            }
+
+            // ---------- 状态 ----------
+            const WEATHERS = ['sunny', 'cloudy', 'rain', 'snow'];
+            const LABELS = { sunny: '☀️ 晴', cloudy: '⛅ 多云', rain: '🌧️ 小雨', snow: '❄️ 小雪' };
+            const MONTH_DEFAULT = m => (m === 12 || m <= 2) ? 'snow' : (m <= 5 ? 'rain' : (m <= 8 ? 'sunny' : 'cloudy'));
+
+            let weather = MONTH_DEFAULT(new Date().getMonth() + 1);
+            let manualOverride = false;
+            let weatherLoading = true;
+
+            const realWeather = { temp: null, desc: '--', scene: 'sunny', city: '', updated: false };
+
+            // ---------- 缓存工具 ----------
+            const CACHE_KEY = 'nail_calc_weather_v1';
+            const CACHE_TTL = 30 * 60 * 1000; // 30 分钟
+
+            function readCache() {
+                try {
+                    const raw = localStorage.getItem(CACHE_KEY);
+                    if (!raw) return null;
+                    const obj = JSON.parse(raw);
+                    if (!obj || !obj.ts || Date.now() - obj.ts > CACHE_TTL) return null;
+                    return obj;
+                } catch (e) { return null; }
+            }
+            function writeCache(data) {
+                try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ...data, ts: Date.now() })); }
+                catch (e) { /* 隐私模式可能禁用 localStorage */ }
+            }
+
+            // ---------- 状态 → UI ----------
+            function refreshCondition() {
+                if (!wcCondEl) return;
+                if (realWeather.updated && realWeather.temp !== null && !manualOverride) {
+                    wcCondEl.textContent = `${realWeather.city ? realWeather.city + ' ' : ''}${realWeather.temp}°C ${realWeather.desc}`;
+                    wcCondEl.classList.remove('is-loading');
+                    return;
+                }
+                if (manualOverride) {
+                    wcCondEl.textContent = LABELS[weather] || '--';
+                    wcCondEl.classList.remove('is-loading');
+                    return;
+                }
+                if (weatherLoading) {
+                    wcCondEl.textContent = '定位中';
+                    wcCondEl.classList.add('is-loading');
+                    return;
+                }
+                wcCondEl.textContent = LABELS[weather] || '--';
+                wcCondEl.classList.remove('is-loading');
+            }
+
+            // 若缓存中有数据，先展示出来
+            const cached = readCache();
+            if (cached) {
+                realWeather.city = cached.city;
+                realWeather.temp = cached.temp;
+                realWeather.desc = cached.desc;
+                realWeather.scene = cached.scene;
+                realWeather.updated = true;
+                weather = cached.scene;
+                weatherLoading = false;
+            }
+            refreshCondition();
+
+            // 点击切换
+            canvas.addEventListener('click', () => {
+                manualOverride = true;
+                const i = WEATHERS.indexOf(weather);
+                weather = WEATHERS[(i + 1) % WEATHERS.length];
+                refreshCondition();
+            });
+
+            // ---------- WMO 映射 ----------
+            const WMO_MAP = {
+                0: { text: '晴', scene: 'sunny' }, 1: { text: '基本晴朗', scene: 'sunny' },
+                2: { text: '多云', scene: 'cloudy' }, 3: { text: '阴', scene: 'cloudy' },
+                45: { text: '雾', scene: 'cloudy' }, 48: { text: '冻雾', scene: 'cloudy' },
+                51: { text: '小毛毛雨', scene: 'rain' }, 53: { text: '毛毛雨', scene: 'rain' }, 55: { text: '大毛毛雨', scene: 'rain' },
+                61: { text: '小雨', scene: 'rain' }, 63: { text: '中雨', scene: 'rain' }, 65: { text: '大雨', scene: 'rain' },
+                66: { text: '冻雨', scene: 'rain' }, 67: { text: '强冻雨', scene: 'rain' },
+                71: { text: '小雪', scene: 'snow' }, 73: { text: '中雪', scene: 'snow' }, 75: { text: '大雪', scene: 'snow' }, 77: { text: '米雪', scene: 'snow' },
+                80: { text: '阵雨', scene: 'rain' }, 81: { text: '中阵雨', scene: 'rain' }, 82: { text: '强阵雨', scene: 'rain' },
+                85: { text: '阵雪', scene: 'snow' }, 86: { text: '强阵雪', scene: 'snow' },
+                95: { text: '雷阵雨', scene: 'rain' }, 96: { text: '雷阵雨伴冰雹', scene: 'rain' }, 99: { text: '强雷阵雨伴冰雹', scene: 'rain' }
+            };
+            const wmoToChinese = code => WMO_MAP[code] || { text: '多云', scene: 'cloudy' };
+
+            // ---------- 工具 ----------
+            function fetchTimeout(url, ms) {
+                return new Promise((resolve, reject) => {
+                    const timer = setTimeout(() => reject(new Error('请求超时')), ms);
+                    fetch(url, { cache: 'no-store', mode: 'cors' })
+                        .then(r => { clearTimeout(timer); resolve(r); })
+                        .catch(e => { clearTimeout(timer); reject(e); });
+                });
+            }
+
+            // ---------- 定位策略 1：浏览器原生 ----------
+            function locateByBrowser() {
+                return new Promise((resolve, reject) => {
+                    if (!navigator.geolocation) return reject(new Error('浏览器不支持定位'));
+                    const timer = setTimeout(() => reject(new Error('浏览器定位超时')), 8000);
+                    navigator.geolocation.getCurrentPosition(
+                        pos => {
+                            clearTimeout(timer);
+                            resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, city: '' });
+                        },
+                        err => {
+                            clearTimeout(timer);
+                            reject(new Error('浏览器定位被拒绝: ' + err.message));
+                        },
+                        { timeout: 8000, maximumAge: 600000, enableHighAccuracy: false }
+                    );
+                });
+            }
+
+            // ---------- 定位策略 2：IP 定位 ----------
+            async function locateByIP() {
+                const services = [
+                    {
+                        name: 'ipapi.co',
+                        fn: async () => {
+                            const r = await fetchTimeout('https://ipapi.co/json/', 5000);
+                            if (!r.ok) throw new Error('HTTP ' + r.status);
+                            const d = await r.json();
+                            if (!d.latitude || !d.longitude) throw new Error('无坐标');
+                            return { lat: d.latitude, lon: d.longitude, city: d.city || d.region || '' };
+                        }
+                    },
+                    {
+                        name: 'ipwho.is',
+                        fn: async () => {
+                            const r = await fetchTimeout('https://ipwho.is/', 5000);
+                            if (!r.ok) throw new Error('HTTP ' + r.status);
+                            const d = await r.json();
+                            if (!d.success || !d.latitude) throw new Error('无坐标');
+                            return { lat: d.latitude, lon: d.longitude, city: d.city || '' };
+                        }
+                    }
+                ];
+                let lastErr = null;
+                for (const s of services) {
+                    try {
+                        const loc = await s.fn();
+                        console.log(`[定位] ${s.name} 成功:`, loc);
+                        return loc;
+                    } catch (e) {
+                        lastErr = e;
+                        console.warn(`[定位] ${s.name} 失败:`, e.message);
+                    }
+                }
+                throw lastErr || new Error('所有 IP 定位服务均失败');
+            }
+
+            // ---------- 反向地理编码 ----------
+            async function reverseGeocode(lat, lon) {
+                try {
+                    const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh`;
+                    const r = await fetchTimeout(url, 4000);
+                    if (!r.ok) return '';
+                    const d = await r.json();
+                    return d.city || d.locality || d.principalSubdivision || '';
+                } catch { return ''; }
+            }
+
+            // ---------- 综合定位 ----------
+            async function autoLocate() {
+                try {
+                    const loc = await locateByBrowser();
+                    console.log('[定位] 使用浏览器原生定位');
+                    if (!loc.city) loc.city = await reverseGeocode(loc.lat, loc.lon);
+                    return loc;
+                } catch (e) { console.warn('[定位]', e.message); }
+
+                try {
+                    const loc = await locateByIP();
+                    if (!loc.city) loc.city = await reverseGeocode(loc.lat, loc.lon);
+                    return loc;
+                } catch (e) { console.warn('[定位]', e.message); }
+
+                console.warn('[定位] 全部失败，使用默认坐标（北京）');
+                return { lat: 39.9042, lon: 116.4074, city: '北京' };
+            }
+
+            // ---------- 天气 API ----------
+            async function fetchWeather(lat, lon) {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`;
+                const r = await fetchTimeout(url, 6000);
+                if (!r.ok) throw new Error('天气接口 HTTP ' + r.status);
+                const data = await r.json();
+                if (!data.current_weather) throw new Error('返回缺少数据');
+                return data.current_weather;
+            }
+
+            // ---------- 主流程 ----------
+            async function loadRealWeather() {
+                // 若缓存有效，直接跳过网络请求
+                const cacheNow = readCache();
+                if (cacheNow) {
+                    console.log('[天气] 使用缓存:', cacheNow);
+                    weatherLoading = false;
+                    refreshCondition();
+                    return;
+                }
+                try {
+                    const loc = await autoLocate();
+                    const cw = await fetchWeather(loc.lat, loc.lon);
+                    const mapped = wmoToChinese(cw.weathercode);
+
+                    realWeather.city = loc.city;
+                    realWeather.temp = Math.round(cw.temperature);
+                    realWeather.desc = mapped.text;
+                    realWeather.scene = mapped.scene;
+                    realWeather.updated = true;
+
+                    writeCache({
+                        city: loc.city, temp: realWeather.temp,
+                        desc: realWeather.desc, scene: realWeather.scene
+                    });
+
+                    if (!manualOverride) weather = mapped.scene;
+                    console.log(`[天气] ${loc.city} ${realWeather.temp}°C ${mapped.text} (code=${cw.weathercode})`);
+                } catch (e) {
+                    console.warn('[天气] 获取失败:', e.message);
+                    realWeather.updated = false;
+                    if (!manualOverride) weather = MONTH_DEFAULT(new Date().getMonth() + 1);
+                } finally {
+                    weatherLoading = false;
+                    refreshCondition();
+                }
+            }
+
+            // ---------- 场景绘制 ----------
+            const CLOUDS = [
+                { base: 0, speed: 2.0, y: 4 },
+                { base: 24, speed: 1.5, y: 10 },
+                { base: 45, speed: 2.6, y: 2 }
+            ];
+            const STARS = [
+                [3,4],[8,11],[14,3],[21,7],[30,9],[35,4],
+                [11,17],[27,15],[6,22],[33,21],[18,12],[24,25]
+            ];
+
+            function drawSky(isDay) {
+                const bands = isDay
+                    ? ['#5fa8d3', '#74b8de', '#8ac7e8', '#a2d6f0', '#bce5f7']
+                    : ['#0b1029', '#121838', '#191f47', '#202656', '#282e66'];
+                for (let i = 0; i < 5; i++) px(0, i * 8, W, 8, bands[i]);
+            }
+            function drawStars(t) {
+                STARS.forEach(([sx, sy], i) => {
+                    if (Math.sin(t * 2.2 + i * 1.3) > -0.35) px(sx, sy, 1, 1, '#ffffff');
+                });
+            }
+            function drawSun(x, y, a) {
+                ctx.globalAlpha = a;
+                circle(x, y, 5, 'rgba(255,221,120,0.22)');
+                circle(x, y, 4, '#FFD93D');
+                circle(x, y, 3, '#FFE066');
+                ctx.globalAlpha = 1;
+            }
+            function drawMoon(x, y, a) {
+                ctx.globalAlpha = a;
+                circle(x, y, 5, 'rgba(220,225,255,0.16)');
+                circle(x, y, 4, '#E6E9F5');
+                circle(x, y, 3, '#F4F6FF');
+                px(x-2, y-1, 1, 1, '#C9CFE3');
+                px(x+1, y+1, 1, 1, '#C9CFE3');
+                px(x-1, y+2, 1, 1, '#D2D8EA');
+                ctx.globalAlpha = 1;
+            }
+            function drawCloud(x, y, color, a) {
+                ctx.globalAlpha = a;
+                px(x+2, y,   4, 1, color);
+                px(x+1, y+1, 7, 1, color);
+                px(x,   y+2,10, 1, color);
+                px(x+1, y+3, 8, 1, color);
+                ctx.globalAlpha = 1;
+            }
+            function drawRain(t) {
+                ctx.fillStyle = '#9fd8ff';
+                for (let i = 0; i < 26; i++) {
+                    const x = (i * 19 + 5) % W;
+                    const speed = 24 + (i % 5) * 5;
+                    const y = 13 + (((i * 13) % 26) + t * speed) % 26;
+                    ctx.fillRect(x * S, Math.floor(y) * S, S, S * 2);
+                }
+            }
+            function drawSnow(t) {
+                ctx.fillStyle = '#ffffff';
+                for (let i = 0; i < 22; i++) {
+                    const drift = Math.sin(t * 1.6 + i * 0.8) * 2.5;
+                    const x = ((i * 23 + 7) % W) + drift;
+                    const speed = 6 + (i % 4) * 2;
+                    const y = 12 + (((i * 11) % 26) + t * speed) % 27;
+                    ctx.fillRect(Math.round(x) * S, Math.floor(y) * S, S, S);
+                }
+            }
+
+            // ---------- 时钟 ----------
+            const WEEKDAYS = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+            let lastSec = -1;
+            function updateClock(d) {
+                const hh = String(d.getHours()).padStart(2, '0');
+                const mm = String(d.getMinutes()).padStart(2, '0');
+                const ss = String(d.getSeconds()).padStart(2, '0');
+                if (wcTimeEl) wcTimeEl.textContent = hh + ':' + mm + ':' + ss;
+                if (wcDateEl) {
+                    wcDateEl.textContent =
+                        d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' +
+                        WEEKDAYS[d.getDay()];
+                }
+                refreshCondition();
+            }
+
+            // ---------- 主循环 ----------
+            function render(now) {
+                const t = now / 1000;
+                const d = new Date();
+                const sec = d.getSeconds();
+                if (sec !== lastSec) { lastSec = sec; updateClock(d); }
+
+                const hf = d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600;
+                const isDay = hf >= 6 && hf < 18;
+                const p = isDay ? (hf - 6) / 12 : (hf >= 18 ? (hf - 18) : (hf + 6)) / 12;
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawSky(isDay);
+                if (!isDay) drawStars(t);
+
+                const bodyX = Math.round(3 + p * 34);
+                const bodyY = Math.round(15 - Math.sin(p * Math.PI) * 11);
+
+                if (weather === 'sunny') isDay ? drawSun(bodyX, bodyY, 1) : drawMoon(bodyX, bodyY, 1);
+                else if (weather === 'cloudy') isDay ? drawSun(bodyX, bodyY, 0.55) : drawMoon(bodyX, bodyY, 0.55);
+
+                const dayColors = { sunny: '#ffffff', cloudy: '#eef3f8', rain: '#9aabb8', snow: '#dfe8f0' };
+                const nightColors = { sunny: '#8899bb', cloudy: '#7a8ba8', rain: '#5a6a80', snow: '#8a9ab8' };
+                const cloudColor = isDay ? dayColors[weather] : nightColors[weather];
+                const cloudCount = weather === 'sunny' ? 1 : 3;
+                const cloudAlpha = weather === 'sunny' ? 0.85 : 1;
+
+                for (let i = 0; i < cloudCount; i++) {
+                    const c = CLOUDS[i];
+                    const raw = ((c.base - t * c.speed) % 56 + 56) % 56;
+                    drawCloud(Math.round(raw - 10), c.y, cloudColor, cloudAlpha);
+                }
+
+                if (weather === 'rain') drawRain(t);
+                else if (weather === 'snow') drawSnow(t);
+
+                requestAnimationFrame(render);
+            }
+
+            requestAnimationFrame(render);
+            loadRealWeather();
+            setInterval(loadRealWeather, 30 * 60 * 1000);
+        })();
+    </script>
+</body>
+</html>
