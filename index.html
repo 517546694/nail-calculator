@@ -9,554 +9,311 @@
     <meta name="description" content="钉箱重量核算工具 - 支持圆帽/D帽、对口箱/飞机盒，附带天气时钟">
     <title>钉箱重量核算工具 · 四重风格</title>
     <style>
-        /* ===== 基础重置 & 全局 ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { -webkit-text-size-adjust: 100%; }
         body {
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            min-height: 100vh; display: flex; justify-content: center; align-items: center;
             font-family: "Microsoft YaHei", "Inter", system-ui, -apple-system, sans-serif;
-            padding: 20px 10px;
-            transition: background 0.5s, color 0.5s;
+            padding: 20px 10px; transition: background 0.5s, color 0.5s;
             -webkit-font-smoothing: antialiased;
         }
-        .wrap {
-            width: 880px;
-            max-width: 96vw;
-            padding: 20px 18px;
-            border-radius: 32px;
-            transition: all 0.5s;
-        }
+        .wrap { width: 880px; max-width: 96vw; padding: 20px 18px; border-radius: 32px; transition: all 0.5s; }
 
-        /* ===== 布局 ===== */
         .main-row { display: flex; gap: 18px; align-items: stretch; }
         .col-input-all { flex: 1; display: flex; flex-direction: column; gap: 12px; }
         .col-result-keypad { width: 320px; display: flex; flex-direction: column; gap: 12px; }
         .animation-panel { margin-top: auto; }
+        .col-input-all > .cyber-panel:last-of-type { flex: 1; }
+        .col-input-all > .cyber-panel:last-of-type .pack-two-col { align-content: start; }
 
-        /* ===== 天气时钟 ===== */
-        .weather-panel { padding: 12px; }
-        .wc-body { display: flex; align-items: center; gap: 12px; }
+        /* ===== 天气时钟（紧凑版） ===== */
+        .weather-panel { padding: 8px 10px !important; }
+        .wc-body { display: flex; align-items: center; gap: 8px; }
         #weatherCanvas {
-            width: 80px; height: 80px; display: block; flex-shrink: 0;
-            border-radius: 12px; cursor: pointer;
+            width: 56px; height: 56px; display: block; flex-shrink: 0;
+            border-radius: 10px; cursor: pointer;
             image-rendering: pixelated; image-rendering: crisp-edges;
-            transition: transform 0.18s ease;
-            touch-action: manipulation;
+            transition: transform 0.18s ease; touch-action: manipulation;
         }
         #weatherCanvas:hover { transform: scale(1.05); }
         #weatherCanvas:active { transform: scale(0.95); }
-        .wc-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+        .wc-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
         .wc-time {
             font-family: "Consolas", "SF Mono", "Courier New", monospace;
-            font-size: 25px; font-weight: 700; line-height: 1.05;
-            letter-spacing: 1px; font-variant-numeric: tabular-nums;
+            font-size: 20px; font-weight: 700; line-height: 1;
+            letter-spacing: 0.5px; font-variant-numeric: tabular-nums;
         }
-        .wc-date { font-size: 12px; font-weight: 600; opacity: 0.72; letter-spacing: 0.4px; }
+        .wc-date { font-size: 10px; font-weight: 600; opacity: 0.72; letter-spacing: 0.2px; line-height: 1.2; }
         .wc-cond {
-            font-size: 12px; font-weight: 700; opacity: 0.92;
-            letter-spacing: 0.4px;
+            font-size: 10px; font-weight: 700; opacity: 0.92;
+            letter-spacing: 0.2px; line-height: 1.2;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .wc-cond.is-loading::after {
-            content: '';
-            display: inline-block;
-            width: 1em;
+            content: ''; display: inline-block; width: 1em;
             animation: dots 1.2s steps(4, end) infinite;
         }
         @keyframes dots {
-            0%   { content: ''; }
-            25%  { content: '·'; }
-            50%  { content: '··'; }
-            75%  { content: '···'; }
-            100% { content: ''; }
+            0% { content: ''; } 25% { content: '·'; }
+            50% { content: '··'; } 75% { content: '···'; } 100% { content: ''; }
         }
 
-        /* ===== 风格 1：新拟态 ===== */
-        body.style-neumo { background: #e0e5ec; color: #2d3436; }
-        body.style-neumo .wrap {
-            background: #e0e5ec;
-            box-shadow: 12px 12px 24px #b8bcc6, -12px -12px 24px #ffffff;
-            border-radius: 40px;
+        /* ===== 折叠按钮（薄版） ===== */
+        .city-toggle {
+            width: 100%; margin-top: 4px; padding: 3px 8px;
+            font-size: 10px; font-weight: 600;
+            border: none; border-radius: 6px;
+            background: rgba(127,127,127,0.12);
+            color: inherit; cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center;
+            font-family: inherit; transition: background 0.2s;
+            user-select: none; line-height: 1.4;
         }
-        body.style-neumo .head-title {
-            color: #2d3436; font-weight: 700; font-size: 22px;
-            letter-spacing: 3px; text-align: center; margin-bottom: 14px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.05);
+        .city-toggle:hover { background: rgba(127,127,127,0.22); }
+        .city-toggle:active { transform: scale(0.99); }
+        .city-toggle-arrow { transition: transform 0.25s ease; font-size: 8px; }
+        .city-toggle.expanded .city-toggle-arrow { transform: rotate(180deg); }
+        .city-panel-body { margin-top: 6px; overflow: hidden; }
+        .city-panel-body[hidden] { display: none; }
+
+        /* ===== 三级联动 ===== */
+        .city-picker { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+        .city-picker select {
+            font-size: 10px; padding: 5px 16px 5px 6px;
+            border-radius: 8px;
+            border: 1px solid rgba(127,127,127,0.25);
+            background-color: rgba(127,127,127,0.06);
+            color: inherit; font-family: inherit; outline: none;
+            min-width: 0; cursor: pointer;
+            -webkit-appearance: none; appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6' viewBox='0 0 8 6'%3e%3cpath fill='%23888' d='M0 0l4 6 4-6z'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 5px center;
+            text-overflow: ellipsis;
         }
-        body.style-neumo .cyber-panel {
-            background: #e0e5ec; border-radius: 28px; padding: 16px 18px;
-            box-shadow: inset 6px 6px 12px #b8bcc6, inset -6px -6px 12px #ffffff;
-            border: none; transition: all 0.4s;
+        .city-picker select:disabled { opacity: 0.5; cursor: not-allowed; }
+        .city-picker select:focus { border-color: rgba(9,132,227,0.6); }
+
+        .manual-city-bar {
+            display: flex; align-items: center; gap: 5px;
+            margin-top: 6px;
         }
-        body.style-neumo .panel-tag {
-            font-size: 13px; font-weight: 600; color: #636e72;
-            margin-bottom: 12px; letter-spacing: 1px; text-transform: uppercase;
+        .manual-city-bar input {
+            flex: 1; min-width: 0; font-size: 10px; padding: 5px 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(127,127,127,0.25);
+            background: rgba(127,127,127,0.06);
+            color: inherit; font-family: inherit; outline: none;
+            transition: border-color 0.2s, background 0.2s;
         }
-        body.style-neumo .cyber-input {
-            background: #e0e5ec; border: none; border-radius: 20px;
-            padding: 10px 16px; font-size: 13px; font-weight: 500; color: #2d3436;
-            box-shadow: inset 4px 4px 8px #b8bcc6, inset -4px -4px 8px #ffffff;
-            transition: all 0.3s; width: 100%; outline: none;
-        }
-        body.style-neumo .cyber-input:focus {
-            box-shadow: inset 6px 6px 12px #b8bcc6, inset -6px -6px 12px #ffffff, 0 0 0 2px #74b9ff;
-        }
-        body.style-neumo .cyber-input:disabled { opacity: 0.5; }
-        body.style-neumo .unit-select {
-            background: #e0e5ec; border: none; border-radius: 16px;
-            padding: 8px 10px; font-size: 12px; color: #2d3436;
-            box-shadow: inset 3px 3px 6px #b8bcc6, inset -3px -3px 6px #ffffff;
-            outline: none; width: 62px;
-        }
-        body.style-neumo .cyber-btn {
-            background: #e0e5ec; border: none; border-radius: 20px;
-            padding: 9px 12px; font-size: 13px; font-weight: 600; color: #2d3436;
-            box-shadow: 5px 5px 12px #b8bcc6, -5px -5px 12px #ffffff;
-            cursor: pointer; transition: all 0.15s; text-align: center;
+        .manual-city-bar input::placeholder { color: rgba(127,127,127,0.7); }
+        .manual-city-bar input:focus { border-color: rgba(9,132,227,0.6); background: rgba(127,127,127,0.1); }
+        .manual-city-bar button {
+            font-size: 10px; font-weight: 600; padding: 5px 8px;
+            border-radius: 8px; border: none;
+            background: rgba(9,132,227,0.16); color: inherit;
+            cursor: pointer; white-space: nowrap; font-family: inherit;
+            transition: background 0.2s, transform 0.12s, opacity 0.2s;
             user-select: none;
         }
-        body.style-neumo .cyber-btn.active {
-            box-shadow: inset 4px 4px 8px #b8bcc6, inset -4px -4px 8px #ffffff;
-            color: #0984e3;
+        .manual-city-bar button:hover:not(:disabled) { background: rgba(9,132,227,0.3); }
+        .manual-city-bar button:active:not(:disabled) { transform: scale(0.96); }
+        .manual-city-bar button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .city-results {
+            display: none; max-height: 130px; overflow-y: auto;
+            margin-top: 5px; border-radius: 8px;
+            background: rgba(127,127,127,0.08);
+            font-size: 10px; line-height: 1.4;
         }
+        .city-results.show { display: block; }
+        .city-result-item {
+            padding: 5px 8px; cursor: pointer;
+            border-bottom: 1px solid rgba(127,127,127,0.12);
+            transition: background 0.12s;
+        }
+        .city-result-item:last-child { border-bottom: none; }
+        .city-result-item:hover { background: rgba(9,132,227,0.14); }
+        .city-result-item .cr-name { font-weight: 700; }
+        .city-result-item .cr-region { opacity: 0.62; font-size: 9px; margin-top: 1px; }
+
+        /* ===== 新拟态 ===== */
+        body.style-neumo { background: #e0e5ec; color: #2d3436; }
+        body.style-neumo .wrap { background: #e0e5ec; box-shadow: 12px 12px 24px #b8bcc6, -12px -12px 24px #ffffff; border-radius: 40px; }
+        body.style-neumo .head-title { color: #2d3436; font-weight: 700; font-size: 22px; letter-spacing: 3px; text-align: center; margin-bottom: 14px; text-shadow: 2px 2px 4px rgba(0,0,0,0.05); }
+        body.style-neumo .cyber-panel { background: #e0e5ec; border-radius: 28px; padding: 16px 18px; box-shadow: inset 6px 6px 12px #b8bcc6, inset -6px -6px 12px #ffffff; border: none; transition: all 0.4s; }
+        body.style-neumo .panel-tag { font-size: 13px; font-weight: 600; color: #636e72; margin-bottom: 12px; letter-spacing: 1px; text-transform: uppercase; }
+        body.style-neumo .cyber-input { background: #e0e5ec; border: none; border-radius: 20px; padding: 10px 16px; font-size: 13px; font-weight: 500; color: #2d3436; box-shadow: inset 4px 4px 8px #b8bcc6, inset -4px -4px 8px #ffffff; transition: all 0.3s; width: 100%; outline: none; }
+        body.style-neumo .cyber-input:focus { box-shadow: inset 6px 6px 12px #b8bcc6, inset -6px -6px 12px #ffffff, 0 0 0 2px #74b9ff; }
+        body.style-neumo .cyber-input:disabled { opacity: 0.5; }
+        body.style-neumo .unit-select { background: #e0e5ec; border: none; border-radius: 16px; padding: 8px 10px; font-size: 12px; color: #2d3436; box-shadow: inset 3px 3px 6px #b8bcc6, inset -3px -3px 6px #ffffff; outline: none; width: 62px; }
+        body.style-neumo .cyber-btn { background: #e0e5ec; border: none; border-radius: 20px; padding: 9px 12px; font-size: 13px; font-weight: 600; color: #2d3436; box-shadow: 5px 5px 12px #b8bcc6, -5px -5px 12px #ffffff; cursor: pointer; transition: all 0.15s; text-align: center; user-select: none; }
+        body.style-neumo .cyber-btn.active { box-shadow: inset 4px 4px 8px #b8bcc6, inset -4px -4px 8px #ffffff; color: #0984e3; }
         body.style-neumo .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-        body.style-neumo .split-line {
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #b8bcc6, transparent);
-            margin: 14px 0; border-radius: 4px;
-        }
-        body.style-neumo .nail-two-col,
-        body.style-neumo .pack-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
-        body.style-neumo .form-item label {
-            font-size: 11px; color: #636e72; display: block;
-            margin-bottom: 4px; font-weight: 500; letter-spacing: 0.5px;
-        }
+        body.style-neumo .split-line { height: 2px; background: linear-gradient(90deg, transparent, #b8bcc6, transparent); margin: 14px 0; border-radius: 4px; }
+        body.style-neumo .nail-two-col, body.style-neumo .pack-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+        body.style-neumo .form-item label { font-size: 11px; color: #636e72; display: block; margin-bottom: 4px; font-weight: 500; letter-spacing: 0.5px; }
         body.style-neumo .input-unit-row { display: flex; gap: 6px; }
-        body.style-neumo .result-box {
-            background: #e0e5ec; border-radius: 28px; padding: 16px 18px;
-            box-shadow: inset 4px 4px 10px #b8bcc6, inset -4px -4px 10px #ffffff;
-        }
-        body.style-neumo .result-row {
-            display: flex; justify-content: space-between;
-            padding: 6px 2px; font-size: 13px;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-        }
+        body.style-neumo .result-box { background: #e0e5ec; border-radius: 28px; padding: 16px 18px; box-shadow: inset 4px 4px 10px #b8bcc6, inset -4px -4px 10px #ffffff; }
+        body.style-neumo .result-row { display: flex; justify-content: space-between; padding: 6px 2px; font-size: 13px; border-bottom: 1px solid rgba(0,0,0,0.05); }
         body.style-neumo .result-name { color: #636e72; }
         body.style-neumo .result-value { color: #0984e3; font-weight: 700; font-size: 14px; }
-        body.style-neumo .total-row {
-            margin-top: 10px; padding-top: 10px;
-            border-top: 2px solid #0984e3;
-            display: flex; justify-content: space-between;
-        }
+        body.style-neumo .total-row { margin-top: 10px; padding-top: 10px; border-top: 2px solid #0984e3; display: flex; justify-content: space-between; }
         body.style-neumo .total-row .result-name { color: #0984e3; font-weight: 700; font-size: 16px; }
         body.style-neumo .total-row .result-value { color: #e17055; font-size: 18px; }
-        body.style-neumo .keypad-grid {
-            display: grid; grid-template-columns: repeat(4,1fr);
-            gap: 10px; margin-bottom: 14px;
-        }
-        body.style-neumo .keypad-btn {
-            background: #e0e5ec; border: none; border-radius: 20px;
-            padding: 12px 0; font-size: 16px; font-weight: 700; color: #2d3436;
-            box-shadow: 5px 5px 12px #b8bcc6, -5px -5px 12px #ffffff;
-            cursor: pointer; transition: all 0.12s; text-align: center;
-            user-select: none;
-        }
-        body.style-neumo .keypad-btn:active {
-            box-shadow: inset 4px 4px 8px #b8bcc6, inset -4px -4px 8px #ffffff;
-            transform: scale(0.95);
-        }
+        body.style-neumo .keypad-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 14px; }
+        body.style-neumo .keypad-btn { background: #e0e5ec; border: none; border-radius: 20px; padding: 12px 0; font-size: 16px; font-weight: 700; color: #2d3436; box-shadow: 5px 5px 12px #b8bcc6, -5px -5px 12px #ffffff; cursor: pointer; transition: all 0.12s; text-align: center; user-select: none; }
+        body.style-neumo .keypad-btn:active { box-shadow: inset 4px 4px 8px #b8bcc6, inset -4px -4px 8px #ffffff; transform: scale(0.95); }
         body.style-neumo .keypad-btn.del { color: #e17055; }
         body.style-neumo .keypad-btn.clear { color: #fdcb6e; }
         body.style-neumo .keypad-btn.enter-key { color: #00b894; font-weight: 800; }
         body.style-neumo .skin-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 4px; }
-        body.style-neumo .skin-btn {
-            background: #e0e5ec; border: none; border-radius: 20px;
-            padding: 10px 6px; font-size: 12px; font-weight: 600; color: #2d3436;
-            box-shadow: 4px 4px 10px #b8bcc6, -4px -4px 10px #ffffff;
-            cursor: pointer; transition: all 0.2s; text-align: center;
-            display: flex; flex-direction: column; align-items: center; gap: 4px;
-            user-select: none;
-        }
-        body.style-neumo .skin-btn.active {
-            box-shadow: inset 4px 4px 8px #b8bcc6, inset -4px -4px 8px #ffffff;
-            color: #0984e3;
-        }
-        body.style-neumo .skin-preview-block {
-            width: 100%; height: 6px; border-radius: 10px;
-            background: #b8bcc6; transition: 0.3s;
-        }
+        body.style-neumo .skin-btn { background: #e0e5ec; border: none; border-radius: 20px; padding: 10px 6px; font-size: 12px; font-weight: 600; color: #2d3436; box-shadow: 4px 4px 10px #b8bcc6, -4px -4px 10px #ffffff; cursor: pointer; transition: all 0.2s; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; user-select: none; }
+        body.style-neumo .skin-btn.active { box-shadow: inset 4px 4px 8px #b8bcc6, inset -4px -4px 8px #ffffff; color: #0984e3; }
+        body.style-neumo .skin-preview-block { width: 100%; height: 6px; border-radius: 10px; background: #b8bcc6; transition: 0.3s; }
         body.style-neumo .skin-btn.active .skin-preview-block { background: #0984e3; }
-        body.style-neumo .error-box {
-            background: #fdf0ed; color: #e17055; padding: 8px 14px;
-            border-radius: 16px; margin-bottom: 10px; display: none;
-            font-size: 12px; font-weight: 500;
-        }
+        body.style-neumo .error-box { background: #fdf0ed; color: #e17055; padding: 8px 14px; border-radius: 16px; margin-bottom: 10px; display: none; font-size: 12px; font-weight: 500; }
+        body.style-neumo .city-toggle { background: #e0e5ec; color: #636e72; box-shadow: 3px 3px 6px #b8bcc6, -3px -3px 6px #ffffff; }
+        body.style-neumo .city-toggle:hover { background: #e0e5ec; color: #2d3436; }
+        body.style-neumo .city-toggle:active { box-shadow: inset 2px 2px 4px #b8bcc6, inset -2px -2px 4px #ffffff; }
+        body.style-neumo .city-picker select, body.style-neumo .manual-city-bar input { background-color: #e0e5ec; border: none; border-radius: 12px; box-shadow: inset 3px 3px 6px #b8bcc6, inset -3px -3px 6px #ffffff; }
+        body.style-neumo .manual-city-bar button { background: #e0e5ec; border-radius: 12px; color: #0984e3; box-shadow: 3px 3px 6px #b8bcc6, -3px -3px 6px #ffffff; }
+        body.style-neumo .manual-city-bar button:hover:not(:disabled) { background: #e0e5ec; color: #0652a3; }
+        body.style-neumo .city-results { background: #e0e5ec; box-shadow: inset 3px 3px 6px #b8bcc6, inset -3px -3px 6px #ffffff; }
 
-        /* ===== 风格 2：复古98 ===== */
+        /* ===== 复古98 ===== */
         body.style-retro98 { background: #c0c0c0; color: #000; font-family: "Courier New", "Microsoft YaHei", monospace; }
-        body.style-retro98 .wrap {
-            background: #c0c0c0; border: 3px solid #fff;
-            border-color: #fff #808080 #808080 #fff;
-            border-radius: 0; box-shadow: none; padding: 16px;
-        }
-        body.style-retro98 .head-title {
-            font-size: 22px; font-weight: 700; letter-spacing: 4px;
-            color: #000; text-shadow: 2px 2px 0 #808080;
-            text-align: center; margin-bottom: 14px;
-        }
-        body.style-retro98 .cyber-panel {
-            background: #c0c0c0; border: 3px solid #fff;
-            border-color: #fff #808080 #808080 #fff;
-            border-radius: 0; padding: 14px 16px; margin-bottom: 8px;
-        }
-        body.style-retro98 .panel-tag {
-            font-size: 14px; font-weight: 700;
-            background: #000080; color: #fff;
-            padding: 3px 10px;
-            margin: -14px -16px 12px -16px;
-            letter-spacing: 1px;
-        }
-        body.style-retro98 .cyber-input {
-            background: #fff; border: 3px solid #808080;
-            border-color: #808080 #fff #fff #808080;
-            border-radius: 0; padding: 6px 10px;
-            font-size: 13px; font-weight: 400; color: #000;
-            width: 100%; outline: none; font-family: inherit;
-        }
+        body.style-retro98 .wrap { background: #c0c0c0; border: 3px solid #fff; border-color: #fff #808080 #808080 #fff; border-radius: 0; box-shadow: none; padding: 16px; }
+        body.style-retro98 .head-title { font-size: 22px; font-weight: 700; letter-spacing: 4px; color: #000; text-shadow: 2px 2px 0 #808080; text-align: center; margin-bottom: 14px; }
+        body.style-retro98 .cyber-panel { background: #c0c0c0; border: 3px solid #fff; border-color: #fff #808080 #808080 #fff; border-radius: 0; padding: 14px 16px; margin-bottom: 8px; }
+        body.style-retro98 .panel-tag { font-size: 14px; font-weight: 700; background: #000080; color: #fff; padding: 3px 10px; margin: -14px -16px 12px -16px; letter-spacing: 1px; }
+        body.style-retro98 .cyber-input { background: #fff; border: 3px solid #808080; border-color: #808080 #fff #fff #808080; border-radius: 0; padding: 6px 10px; font-size: 13px; font-weight: 400; color: #000; width: 100%; outline: none; font-family: inherit; }
         body.style-retro98 .cyber-input:focus { border-color: #000080; }
         body.style-retro98 .cyber-input:disabled { background: #e0e0e0; color: #808080; }
-        body.style-retro98 .unit-select {
-            background: #fff; border: 3px solid #808080;
-            border-color: #808080 #fff #fff #808080;
-            border-radius: 0; padding: 4px 6px; font-size: 12px;
-            color: #000; width: 62px; font-family: inherit;
-        }
-        body.style-retro98 .cyber-btn {
-            background: #c0c0c0; border: 3px solid #fff;
-            border-color: #fff #808080 #808080 #fff;
-            border-radius: 0; padding: 8px 12px;
-            font-size: 13px; font-weight: 700; color: #000;
-            cursor: pointer; text-align: center;
-            font-family: inherit; transition: none;
-            user-select: none;
-        }
-        body.style-retro98 .cyber-btn.active {
-            border-color: #808080 #fff #fff #808080;
-            background: #c0c0c0;
-        }
+        body.style-retro98 .unit-select { background: #fff; border: 3px solid #808080; border-color: #808080 #fff #fff #808080; border-radius: 0; padding: 4px 6px; font-size: 12px; color: #000; width: 62px; font-family: inherit; }
+        body.style-retro98 .cyber-btn { background: #c0c0c0; border: 3px solid #fff; border-color: #fff #808080 #808080 #fff; border-radius: 0; padding: 8px 12px; font-size: 13px; font-weight: 700; color: #000; cursor: pointer; text-align: center; font-family: inherit; transition: none; user-select: none; }
+        body.style-retro98 .cyber-btn.active { border-color: #808080 #fff #fff #808080; background: #c0c0c0; }
         body.style-retro98 .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
         body.style-retro98 .split-line { height: 3px; background: #808080; margin: 12px 0; border: none; }
-        body.style-retro98 .nail-two-col,
-        body.style-retro98 .pack-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
-        body.style-retro98 .form-item label {
-            font-size: 12px; color: #000; display: block;
-            margin-bottom: 3px; font-weight: 600;
-        }
+        body.style-retro98 .nail-two-col, body.style-retro98 .pack-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+        body.style-retro98 .form-item label { font-size: 12px; color: #000; display: block; margin-bottom: 3px; font-weight: 600; }
         body.style-retro98 .input-unit-row { display: flex; gap: 4px; }
-        body.style-retro98 .result-box {
-            background: #c0c0c0; border: 3px solid #808080;
-            border-color: #808080 #fff #fff #808080;
-            border-radius: 0; padding: 14px 16px;
-        }
-        body.style-retro98 .result-row {
-            display: flex; justify-content: space-between;
-            padding: 4px 2px; border-bottom: 1px dashed #808080;
-            font-size: 13px; font-family: inherit;
-        }
+        body.style-retro98 .result-box { background: #c0c0c0; border: 3px solid #808080; border-color: #808080 #fff #fff #808080; border-radius: 0; padding: 14px 16px; }
+        body.style-retro98 .result-row { display: flex; justify-content: space-between; padding: 4px 2px; border-bottom: 1px dashed #808080; font-size: 13px; font-family: inherit; }
         body.style-retro98 .result-name { color: #000; }
         body.style-retro98 .result-value { color: #000; font-weight: 700; }
-        body.style-retro98 .total-row {
-            margin-top: 10px; padding-top: 10px;
-            border-top: 3px solid #000;
-            display: flex; justify-content: space-between;
-        }
+        body.style-retro98 .total-row { margin-top: 10px; padding-top: 10px; border-top: 3px solid #000; display: flex; justify-content: space-between; }
         body.style-retro98 .total-row .result-name { color: #000; font-weight: 700; font-size: 16px; }
         body.style-retro98 .total-row .result-value { color: #000; font-size: 18px; font-weight: 900; }
-        body.style-retro98 .keypad-grid {
-            display: grid; grid-template-columns: repeat(4,1fr);
-            gap: 6px; margin-bottom: 12px;
-        }
-        body.style-retro98 .keypad-btn {
-            background: #c0c0c0; border: 3px solid #fff;
-            border-color: #fff #808080 #808080 #fff;
-            border-radius: 0; padding: 10px 0;
-            font-size: 16px; font-weight: 700; color: #000;
-            cursor: pointer; text-align: center; font-family: inherit;
-            user-select: none;
-        }
+        body.style-retro98 .keypad-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 12px; }
+        body.style-retro98 .keypad-btn { background: #c0c0c0; border: 3px solid #fff; border-color: #fff #808080 #808080 #fff; border-radius: 0; padding: 10px 0; font-size: 16px; font-weight: 700; color: #000; cursor: pointer; text-align: center; font-family: inherit; user-select: none; }
         body.style-retro98 .keypad-btn:active { border-color: #808080 #fff #fff #808080; }
-        body.style-retro98 .keypad-btn.del,
-        body.style-retro98 .keypad-btn.clear { background: #c0c0c0; }
-        body.style-retro98 .keypad-btn.enter-key { background: #c0c0c0; font-weight: 900; }
+        body.style-retro98 .keypad-btn.enter-key { font-weight: 900; }
         body.style-retro98 .skin-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
-        body.style-retro98 .skin-btn {
-            background: #c0c0c0; border: 3px solid #fff;
-            border-color: #fff #808080 #808080 #fff;
-            border-radius: 0; padding: 8px 4px;
-            font-size: 11px; font-weight: 700; color: #000;
-            cursor: pointer; text-align: center; font-family: inherit;
-            display: flex; flex-direction: column; align-items: center; gap: 3px;
-            user-select: none;
-        }
+        body.style-retro98 .skin-btn { background: #c0c0c0; border: 3px solid #fff; border-color: #fff #808080 #808080 #fff; border-radius: 0; padding: 8px 4px; font-size: 11px; font-weight: 700; color: #000; cursor: pointer; text-align: center; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 3px; user-select: none; }
         body.style-retro98 .skin-btn.active { border-color: #808080 #fff #fff #808080; background: #d0d0d0; }
         body.style-retro98 .skin-preview-block { width: 100%; height: 5px; background: #808080; }
         body.style-retro98 .skin-btn.active .skin-preview-block { background: #000; }
-        body.style-retro98 .error-box {
-            background: #ffeeee; color: #c00;
-            border: 2px solid #c00; padding: 6px 12px;
-            margin-bottom: 10px; display: none;
-            font-size: 12px; font-weight: 600;
-        }
+        body.style-retro98 .error-box { background: #ffeeee; color: #c00; border: 2px solid #c00; padding: 6px 12px; margin-bottom: 10px; display: none; font-size: 12px; font-weight: 600; }
+        body.style-retro98 .city-toggle { background: #c0c0c0; color: #000; border: 2px solid #fff; border-color: #fff #808080 #808080 #fff; border-radius: 0; padding: 3px 8px; }
+        body.style-retro98 .city-toggle:hover { background: #d0d0d0; }
+        body.style-retro98 .city-toggle:active { border-color: #808080 #fff #fff #808080; }
+        body.style-retro98 .city-picker select, body.style-retro98 .manual-city-bar input { background-color: #fff; border: 2px solid #808080; border-color: #808080 #fff #fff #808080; border-radius: 0; }
+        body.style-retro98 .manual-city-bar button { background: #c0c0c0; border: 2px solid #fff; border-color: #fff #808080 #808080 #fff; border-radius: 0; color: #000; }
+        body.style-retro98 .manual-city-bar button:hover:not(:disabled) { background: #d0d0d0; }
+        body.style-retro98 .manual-city-bar button:active:not(:disabled) { border-color: #808080 #fff #fff #808080; }
+        body.style-retro98 .city-results { border-radius: 0; background: #c0c0c0; border: 2px solid #808080; border-color: #808080 #fff #fff #808080; }
 
-        /* ===== 风格 3：粘土风 ===== */
-        body.style-clay {
-            background: #fdf6f0; color: #4a3728;
-            font-family: "Quicksand", "Microsoft YaHei", system-ui, sans-serif;
-        }
-        body.style-clay .wrap {
-            background: #fdf6f0; border-radius: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.10), 0 8px 16px rgba(0,0,0,0.06);
-            padding: 20px 18px; border: none;
-        }
-        body.style-clay .head-title {
-            font-size: 22px; font-weight: 800; color: #4a3728;
-            text-align: center; margin-bottom: 14px;
-            letter-spacing: 2px; text-shadow: 0 4px 0 #e8d5c4;
-        }
-        body.style-clay .cyber-panel {
-            background: #fdf6f0; border-radius: 28px; padding: 16px 18px;
-            box-shadow: 0 12px 0 #dccfc4, 0 16px 32px rgba(0,0,0,0.10);
-            border: none; transition: all 0.3s;
-        }
-        body.style-clay .panel-tag {
-            font-size: 13px; font-weight: 700; color: #4a3728;
-            margin-bottom: 12px; letter-spacing: 1px;
-            background: #ffefe4; display: inline-block;
-            padding: 4px 18px; border-radius: 40px;
-            box-shadow: inset 0 -3px 0 #dccfc4;
-        }
-        body.style-clay .cyber-input {
-            background: #ffffff; border: 2px solid #dccfc4;
-            border-radius: 20px; padding: 10px 16px;
-            font-size: 13px; font-weight: 600; color: #4a3728;
-            width: 100%; outline: none;
-            box-shadow: 0 8px 0 #b8a898, inset 0 2px 8px rgba(0,0,0,0.06);
-            transition: all 0.15s; font-family: inherit;
-        }
-        body.style-clay .cyber-input:focus {
-            border-color: #6b8c5c;
-            box-shadow: 0 8px 0 #8aaf7a, inset 0 2px 8px rgba(0,0,0,0.06);
-        }
+        /* ===== 粘土风 ===== */
+        body.style-clay { background: #fdf6f0; color: #4a3728; font-family: "Quicksand", "Microsoft YaHei", system-ui, sans-serif; }
+        body.style-clay .wrap { background: #fdf6f0; border-radius: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.10), 0 8px 16px rgba(0,0,0,0.06); padding: 20px 18px; border: none; }
+        body.style-clay .head-title { font-size: 22px; font-weight: 800; color: #4a3728; text-align: center; margin-bottom: 14px; letter-spacing: 2px; text-shadow: 0 4px 0 #e8d5c4; }
+        body.style-clay .cyber-panel { background: #fdf6f0; border-radius: 28px; padding: 16px 18px; box-shadow: 0 12px 0 #dccfc4, 0 16px 32px rgba(0,0,0,0.10); border: none; transition: all 0.3s; }
+        body.style-clay .panel-tag { font-size: 13px; font-weight: 700; color: #4a3728; margin-bottom: 12px; letter-spacing: 1px; background: #ffefe4; display: inline-block; padding: 4px 18px; border-radius: 40px; box-shadow: inset 0 -3px 0 #dccfc4; }
+        body.style-clay .cyber-input { background: #ffffff; border: 2px solid #dccfc4; border-radius: 20px; padding: 10px 16px; font-size: 13px; font-weight: 600; color: #4a3728; width: 100%; outline: none; box-shadow: 0 8px 0 #b8a898, inset 0 2px 8px rgba(0,0,0,0.06); transition: all 0.15s; font-family: inherit; }
+        body.style-clay .cyber-input:focus { border-color: #6b8c5c; box-shadow: 0 8px 0 #8aaf7a, inset 0 2px 8px rgba(0,0,0,0.06); }
         body.style-clay .cyber-input:disabled { opacity: 0.5; box-shadow: 0 4px 0 #b8a898; }
-        body.style-clay .unit-select {
-            background: #ffffff; border: 2px solid #dccfc4;
-            border-radius: 16px; padding: 8px 10px;
-            font-size: 12px; font-weight: 600; color: #4a3728;
-            width: 62px; box-shadow: 0 8px 0 #b8a898;
-            outline: none; font-family: inherit;
-        }
-        body.style-clay .cyber-btn {
-            background: #ffefe4; border: none; border-radius: 20px;
-            padding: 9px 12px; font-size: 13px; font-weight: 700; color: #4a3728;
-            cursor: pointer; box-shadow: 0 8px 0 #dccfc4;
-            transition: all 0.08s linear; text-align: center;
-            font-family: inherit; user-select: none;
-        }
+        body.style-clay .unit-select { background: #ffffff; border: 2px solid #dccfc4; border-radius: 16px; padding: 8px 10px; font-size: 12px; font-weight: 600; color: #4a3728; width: 62px; box-shadow: 0 8px 0 #b8a898; outline: none; font-family: inherit; }
+        body.style-clay .cyber-btn { background: #ffefe4; border: none; border-radius: 20px; padding: 9px 12px; font-size: 13px; font-weight: 700; color: #4a3728; cursor: pointer; box-shadow: 0 8px 0 #dccfc4; transition: all 0.08s linear; text-align: center; font-family: inherit; user-select: none; }
         body.style-clay .cyber-btn:active { transform: translateY(4px); box-shadow: 0 4px 0 #dccfc4; }
         body.style-clay .cyber-btn.active { background: #6b8c5c; color: #fff; box-shadow: 0 8px 0 #4a6a3a; }
         body.style-clay .cyber-btn.active:active { transform: translateY(4px); box-shadow: 0 4px 0 #4a6a3a; }
         body.style-clay .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-        body.style-clay .split-line {
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #e8d5c4, transparent);
-            margin: 14px 0; border-radius: 4px;
-        }
-        body.style-clay .nail-two-col,
-        body.style-clay .pack-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
-        body.style-clay .form-item label {
-            font-size: 11px; font-weight: 700; color: #4a3728;
-            display: block; margin-bottom: 4px; letter-spacing: 0.5px;
-        }
+        body.style-clay .split-line { height: 2px; background: linear-gradient(90deg, transparent, #e8d5c4, transparent); margin: 14px 0; border-radius: 4px; }
+        body.style-clay .nail-two-col, body.style-clay .pack-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+        body.style-clay .form-item label { font-size: 11px; font-weight: 700; color: #4a3728; display: block; margin-bottom: 4px; letter-spacing: 0.5px; }
         body.style-clay .input-unit-row { display: flex; gap: 6px; }
-        body.style-clay .result-box {
-            background: #fdf6f0; border-radius: 28px; padding: 16px 18px;
-            box-shadow: 0 12px 0 #dccfc4, 0 16px 32px rgba(0,0,0,0.08);
-            border: none;
-        }
-        body.style-clay .result-row {
-            display: flex; justify-content: space-between;
-            padding: 6px 2px; font-size: 13px; font-weight: 600;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-        }
+        body.style-clay .result-box { background: #fdf6f0; border-radius: 28px; padding: 16px 18px; box-shadow: 0 12px 0 #dccfc4, 0 16px 32px rgba(0,0,0,0.08); border: none; }
+        body.style-clay .result-row { display: flex; justify-content: space-between; padding: 6px 2px; font-size: 13px; font-weight: 600; border-bottom: 1px solid rgba(0,0,0,0.05); }
         body.style-clay .result-name { color: #8a7a6a; }
         body.style-clay .result-value { color: #6b8c5c; font-weight: 800; font-size: 14px; }
-        body.style-clay .total-row {
-            margin-top: 10px; padding-top: 10px;
-            border-top: 2px solid #d4746a;
-            display: flex; justify-content: space-between;
-        }
+        body.style-clay .total-row { margin-top: 10px; padding-top: 10px; border-top: 2px solid #d4746a; display: flex; justify-content: space-between; }
         body.style-clay .total-row .result-name { color: #d4746a; font-weight: 800; font-size: 16px; }
         body.style-clay .total-row .result-value { color: #d4746a; font-size: 18px; font-weight: 900; }
-        body.style-clay .keypad-grid {
-            display: grid; grid-template-columns: repeat(4,1fr);
-            gap: 10px; margin-bottom: 14px;
-        }
-        body.style-clay .keypad-btn {
-            background: #ffefe4; border: none; border-radius: 20px;
-            padding: 12px 0; font-size: 16px; font-weight: 800; color: #4a3728;
-            cursor: pointer; box-shadow: 0 8px 0 #dccfc4;
-            transition: all 0.06s linear; text-align: center;
-            font-family: inherit; user-select: none;
-        }
+        body.style-clay .keypad-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 14px; }
+        body.style-clay .keypad-btn { background: #ffefe4; border: none; border-radius: 20px; padding: 12px 0; font-size: 16px; font-weight: 800; color: #4a3728; cursor: pointer; box-shadow: 0 8px 0 #dccfc4; transition: all 0.06s linear; text-align: center; font-family: inherit; user-select: none; }
         body.style-clay .keypad-btn:active { transform: translateY(4px); box-shadow: 0 4px 0 #dccfc4; }
         body.style-clay .keypad-btn.del { background: #f5d4c8; box-shadow: 0 8px 0 #c8b0a4; color: #8a5a4a; }
         body.style-clay .keypad-btn.clear { background: #f5e4b8; box-shadow: 0 8px 0 #c8b48c; color: #8a7a3a; }
         body.style-clay .keypad-btn.enter-key { background: #a8c8a0; box-shadow: 0 8px 0 #6a9060; color: #fff; }
         body.style-clay .skin-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
-        body.style-clay .skin-btn {
-            background: #ffefe4; border: none; border-radius: 20px;
-            padding: 10px 6px; font-size: 12px; font-weight: 700; color: #4a3728;
-            cursor: pointer; box-shadow: 0 8px 0 #dccfc4;
-            transition: all 0.06s linear; text-align: center;
-            font-family: inherit; display: flex; flex-direction: column;
-            align-items: center; gap: 4px; user-select: none;
-        }
+        body.style-clay .skin-btn { background: #ffefe4; border: none; border-radius: 20px; padding: 10px 6px; font-size: 12px; font-weight: 700; color: #4a3728; cursor: pointer; box-shadow: 0 8px 0 #dccfc4; transition: all 0.06s linear; text-align: center; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 4px; user-select: none; }
         body.style-clay .skin-btn.active { background: #6b8c5c; color: #fff; box-shadow: 0 8px 0 #4a6a3a; }
         body.style-clay .skin-btn.active .skin-preview-block { background: #fff; }
         body.style-clay .skin-preview-block { width: 100%; height: 6px; border-radius: 10px; background: #dccfc4; }
-        body.style-clay .error-box {
-            background: #fdf0ed; color: #d4746a; border: none;
-            border-radius: 16px; padding: 8px 14px;
-            margin-bottom: 10px; display: none;
-            font-size: 12px; font-weight: 700;
-        }
+        body.style-clay .error-box { background: #fdf0ed; color: #d4746a; border: none; border-radius: 16px; padding: 8px 14px; margin-bottom: 10px; display: none; font-size: 12px; font-weight: 700; }
+        body.style-clay .city-toggle { background: #ffefe4; color: #4a3728; box-shadow: 0 3px 0 #dccfc4; padding: 3px 8px; border-radius: 10px; }
+        body.style-clay .city-toggle:hover { background: #ffe4d4; }
+        body.style-clay .city-toggle:active { transform: translateY(2px); box-shadow: 0 1px 0 #dccfc4; }
+        body.style-clay .city-picker select, body.style-clay .manual-city-bar input { background-color: #fff; border: 2px solid #dccfc4; border-radius: 12px; box-shadow: 0 3px 0 #b8a898; }
+        body.style-clay .manual-city-bar button { background: #ffefe4; border-radius: 12px; color: #4a3728; box-shadow: 0 3px 0 #dccfc4; }
+        body.style-clay .manual-city-bar button:hover:not(:disabled) { background: #ffe4d4; }
+        body.style-clay .manual-city-bar button:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #dccfc4; }
+        body.style-clay .city-results { background: #ffefe4; }
 
-        /* ===== 风格 4：极简商务 ===== */
+        /* ===== 极简商务 ===== */
         body.style-minimal { background: #f5f7fa; color: #1a2332; font-family: "Inter", "Microsoft YaHei", system-ui, sans-serif; }
-        body.style-minimal .wrap {
-            background: #ffffff; border-radius: 24px;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.03);
-            padding: 28px 30px;
-            border: 1px solid rgba(0,0,0,0.04);
-        }
-        body.style-minimal .head-title {
-            font-size: 20px; font-weight: 600; color: #1a2332;
-            text-align: center; margin-bottom: 18px; letter-spacing: 3px;
-        }
-        body.style-minimal .cyber-panel {
-            background: #ffffff; border-radius: 16px;
-            padding: 16px 18px;
-            border: 1px solid #e9edf2;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-            transition: all 0.3s;
-        }
-        body.style-minimal .panel-tag {
-            font-size: 12px; font-weight: 600; color: #4a5a6a;
-            margin-bottom: 14px; letter-spacing: 1.5px;
-            text-transform: uppercase;
-            border-bottom: 2px solid #e9edf2;
-            padding-bottom: 8px;
-        }
-        body.style-minimal .cyber-input {
-            background: #f5f7fa; border: 1.5px solid #dce0e6;
-            border-radius: 10px; padding: 10px 14px;
-            font-size: 13px; font-weight: 500; color: #1a2332;
-            width: 100%; outline: none;
-            transition: all 0.2s; font-family: inherit;
-        }
-        body.style-minimal .cyber-input:focus {
-            border-color: #2d6a4f;
-            box-shadow: 0 0 0 3px rgba(45,106,79,0.10);
-            background: #ffffff;
-        }
+        body.style-minimal .wrap { background: #ffffff; border-radius: 24px; box-shadow: 0 8px 40px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.03); padding: 28px 30px; border: 1px solid rgba(0,0,0,0.04); }
+        body.style-minimal .head-title { font-size: 20px; font-weight: 600; color: #1a2332; text-align: center; margin-bottom: 18px; letter-spacing: 3px; }
+        body.style-minimal .cyber-panel { background: #ffffff; border-radius: 16px; padding: 16px 18px; border: 1px solid #e9edf2; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: all 0.3s; }
+        body.style-minimal .panel-tag { font-size: 12px; font-weight: 600; color: #4a5a6a; margin-bottom: 14px; letter-spacing: 1.5px; text-transform: uppercase; border-bottom: 2px solid #e9edf2; padding-bottom: 8px; }
+        body.style-minimal .cyber-input { background: #f5f7fa; border: 1.5px solid #dce0e6; border-radius: 10px; padding: 10px 14px; font-size: 13px; font-weight: 500; color: #1a2332; width: 100%; outline: none; transition: all 0.2s; font-family: inherit; }
+        body.style-minimal .cyber-input:focus { border-color: #2d6a4f; box-shadow: 0 0 0 3px rgba(45,106,79,0.10); background: #ffffff; }
         body.style-minimal .cyber-input:disabled { background: #f0f2f5; color: #8a9aa8; border-color: #e0e4e8; }
-        body.style-minimal .unit-select {
-            background: #f5f7fa; border: 1.5px solid #dce0e6;
-            border-radius: 10px; padding: 6px 10px;
-            font-size: 12px; font-weight: 500; color: #1a2332;
-            width: 62px; outline: none; font-family: inherit;
-            transition: all 0.2s;
-        }
-        body.style-minimal .cyber-btn {
-            background: #f5f7fa; border: 1.5px solid #dce0e6;
-            border-radius: 12px; padding: 8px 14px;
-            font-size: 13px; font-weight: 600; color: #1a2332;
-            cursor: pointer; transition: all 0.2s;
-            text-align: center; font-family: inherit;
-            user-select: none;
-        }
+        body.style-minimal .unit-select { background: #f5f7fa; border: 1.5px solid #dce0e6; border-radius: 10px; padding: 6px 10px; font-size: 12px; font-weight: 500; color: #1a2332; width: 62px; outline: none; font-family: inherit; transition: all 0.2s; }
+        body.style-minimal .cyber-btn { background: #f5f7fa; border: 1.5px solid #dce0e6; border-radius: 12px; padding: 8px 14px; font-size: 13px; font-weight: 600; color: #1a2332; cursor: pointer; transition: all 0.2s; text-align: center; font-family: inherit; user-select: none; }
         body.style-minimal .cyber-btn.active { background: #2d6a4f; color: #fff; border-color: #2d6a4f; }
         body.style-minimal .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
         body.style-minimal .split-line { height: 1px; background: #e9edf2; margin: 14px 0; }
-        body.style-minimal .nail-two-col,
-        body.style-minimal .pack-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
-        body.style-minimal .form-item label {
-            font-size: 11px; font-weight: 600; color: #4a5a6a;
-            display: block; margin-bottom: 4px; letter-spacing: 0.3px;
-        }
+        body.style-minimal .nail-two-col, body.style-minimal .pack-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+        body.style-minimal .form-item label { font-size: 11px; font-weight: 600; color: #4a5a6a; display: block; margin-bottom: 4px; letter-spacing: 0.3px; }
         body.style-minimal .input-unit-row { display: flex; gap: 6px; }
-        body.style-minimal .result-box {
-            background: #fafbfc; border-radius: 16px;
-            padding: 16px 18px; border: 1px solid #e9edf2;
-        }
-        body.style-minimal .result-row {
-            display: flex; justify-content: space-between;
-            padding: 6px 2px; border-bottom: 1px solid #edf0f5;
-            font-size: 13px;
-        }
+        body.style-minimal .result-box { background: #fafbfc; border-radius: 16px; padding: 16px 18px; border: 1px solid #e9edf2; }
+        body.style-minimal .result-row { display: flex; justify-content: space-between; padding: 6px 2px; border-bottom: 1px solid #edf0f5; font-size: 13px; }
         body.style-minimal .result-name { color: #6a7a8a; font-weight: 500; }
         body.style-minimal .result-value { color: #1a2332; font-weight: 700; }
-        body.style-minimal .total-row {
-            margin-top: 10px; padding-top: 10px;
-            border-top: 2px solid #2d6a4f;
-            display: flex; justify-content: space-between;
-        }
+        body.style-minimal .total-row { margin-top: 10px; padding-top: 10px; border-top: 2px solid #2d6a4f; display: flex; justify-content: space-between; }
         body.style-minimal .total-row .result-name { color: #2d6a4f; font-weight: 700; font-size: 15px; }
         body.style-minimal .total-row .result-value { color: #d62828; font-size: 17px; font-weight: 800; }
-        body.style-minimal .keypad-grid {
-            display: grid; grid-template-columns: repeat(4,1fr);
-            gap: 8px; margin-bottom: 14px;
-        }
-        body.style-minimal .keypad-btn {
-            background: #f5f7fa; border: 1.5px solid #dce0e6;
-            border-radius: 12px; padding: 11px 0;
-            font-size: 15px; font-weight: 600; color: #1a2332;
-            cursor: pointer; transition: all 0.15s;
-            text-align: center; font-family: inherit;
-            user-select: none;
-        }
+        body.style-minimal .keypad-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 14px; }
+        body.style-minimal .keypad-btn { background: #f5f7fa; border: 1.5px solid #dce0e6; border-radius: 12px; padding: 11px 0; font-size: 15px; font-weight: 600; color: #1a2332; cursor: pointer; transition: all 0.15s; text-align: center; font-family: inherit; user-select: none; }
         body.style-minimal .keypad-btn:active { transform: scale(0.96); }
         body.style-minimal .keypad-btn.del { color: #d62828; border-color: #f5d0d0; }
         body.style-minimal .keypad-btn.clear { color: #f09b22; border-color: #f5e0c0; }
         body.style-minimal .keypad-btn.enter-key { background: #2d6a4f; color: #fff; border-color: #2d6a4f; }
         body.style-minimal .skin-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
-        body.style-minimal .skin-btn {
-            background: #f5f7fa; border: 1.5px solid #dce0e6;
-            border-radius: 12px; padding: 8px 6px;
-            font-size: 11px; font-weight: 600; color: #1a2332;
-            cursor: pointer; transition: all 0.2s;
-            text-align: center; display: flex;
-            flex-direction: column; align-items: center;
-            gap: 4px; font-family: inherit;
-            user-select: none;
-        }
+        body.style-minimal .skin-btn { background: #f5f7fa; border: 1.5px solid #dce0e6; border-radius: 12px; padding: 8px 6px; font-size: 11px; font-weight: 600; color: #1a2332; cursor: pointer; transition: all 0.2s; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; font-family: inherit; user-select: none; }
         body.style-minimal .skin-btn.active { background: #2d6a4f; color: #fff; border-color: #2d6a4f; }
         body.style-minimal .skin-btn.active .skin-preview-block { background: #fff; }
-        body.style-minimal .skin-preview-block {
-            width: 100%; height: 4px; border-radius: 4px;
-            background: #dce0e6; transition: 0.2s;
-        }
-        body.style-minimal .error-box {
-            background: #fde8e8; color: #d62828;
-            border: 1.5px solid #f5d0d0; border-radius: 10px;
-            padding: 8px 14px; margin-bottom: 10px;
-            display: none; font-size: 12px; font-weight: 500;
-        }
+        body.style-minimal .skin-preview-block { width: 100%; height: 4px; border-radius: 4px; background: #dce0e6; transition: 0.2s; }
+        body.style-minimal .error-box { background: #fde8e8; color: #d62828; border: 1.5px solid #f5d0d0; border-radius: 10px; padding: 8px 14px; margin-bottom: 10px; display: none; font-size: 12px; font-weight: 500; }
+        body.style-minimal .city-toggle { background: #f5f7fa; color: #2d6a4f; border: 1.5px solid #dce0e6; padding: 3px 8px; border-radius: 8px; }
+        body.style-minimal .city-toggle:hover { background: #e9edf2; }
+        body.style-minimal .city-picker select, body.style-minimal .manual-city-bar input { background-color: #f5f7fa; border: 1.5px solid #dce0e6; border-radius: 8px; }
+        body.style-minimal .manual-city-bar button { background: #f5f7fa; border: 1.5px solid #dce0e6; border-radius: 8px; color: #2d6a4f; }
+        body.style-minimal .manual-city-bar button:hover:not(:disabled) { background: #e9edf2; }
+        body.style-minimal .city-results { background: #f5f7fa; border: 1px solid #e9edf2; }
 
-        /* ===== 响应式 ===== */
         @media (max-width: 780px) {
             .main-row { flex-direction: column !important; }
             .col-result-keypad { width: 100% !important; }
@@ -564,28 +321,28 @@
             .wrap { padding: 14px !important; }
             .skin-bar { grid-template-columns: repeat(2, 1fr) !important; }
             .btn-group { grid-template-columns: 1fr 1fr !important; }
+            .col-input-all > .cyber-panel:last-of-type { flex: initial; }
         }
         @media (max-width: 480px) {
             .head-title { font-size: 16px !important; }
             .keypad-grid { gap: 6px !important; }
             .keypad-btn { padding: 10px 0 !important; font-size: 14px !important; }
-            .wc-time { font-size: 21px !important; }
-            #weatherCanvas { width: 68px !important; height: 68px !important; }
+            .wc-time { font-size: 18px !important; }
+            #weatherCanvas { width: 48px !important; height: 48px !important; }
+            .city-picker { grid-template-columns: 1fr 1fr 1fr; }
+            .city-picker select { font-size: 9px; padding: 4px 14px 4px 5px; }
         }
     </style>
 </head>
 <body class="style-neumo">
     <div class="wrap">
-        <!-- 标题 -->
         <div class="head-title">
             <span class="green">NAIL WEIGHT</span>
             <span class="red">CALCULATOR</span>
         </div>
 
         <div class="main-row">
-            <!-- 左列：输入 -->
             <div class="col-input-all" id="inputWrap">
-                <!-- 钉子参数 -->
                 <div class="cyber-panel">
                     <div class="panel-tag">① 钉子参数</div>
                     <div class="btn-group" data-group="cap">
@@ -608,7 +365,6 @@
 
                 <div class="split-line"></div>
 
-                <!-- 纸箱 & 焊丝 & 卷钉 -->
                 <div class="cyber-panel">
                     <div class="panel-tag">② 纸箱 &amp; 焊丝 &amp; 卷钉</div>
                     <div class="btn-group" data-group="box">
@@ -621,10 +377,7 @@
                             <label>纸箱长</label>
                             <div class="input-unit-row">
                                 <input class="cyber-input" id="boxL" type="text" inputmode="decimal" tabindex="12">
-                                <select class="unit-select" id="unitL">
-                                    <option value="10">cm</option>
-                                    <option value="1">mm</option>
-                                </select>
+                                <select class="unit-select" id="unitL"><option value="10">cm</option><option value="1">mm</option></select>
                             </div>
                         </div>
                         <div class="form-item"><label>焊丝线径 mm</label><input class="cyber-input" id="wireD" value="0.7" type="text" inputmode="decimal" tabindex="13"></div>
@@ -632,10 +385,7 @@
                             <label>纸箱宽</label>
                             <div class="input-unit-row">
                                 <input class="cyber-input" id="boxW" type="text" inputmode="decimal" tabindex="14">
-                                <select class="unit-select" id="unitW">
-                                    <option value="10">cm</option>
-                                    <option value="1">mm</option>
-                                </select>
+                                <select class="unit-select" id="unitW"><option value="10">cm</option><option value="1">mm</option></select>
                             </div>
                         </div>
                         <div class="form-item"><label>卷轴直径 mm</label><input class="cyber-input" id="reelD" type="text" inputmode="decimal" tabindex="15"></div>
@@ -643,10 +393,7 @@
                             <label>纸箱高</label>
                             <div class="input-unit-row">
                                 <input class="cyber-input" id="boxH" type="text" inputmode="decimal" tabindex="16">
-                                <select class="unit-select" id="unitH">
-                                    <option value="10">cm</option>
-                                    <option value="1">mm</option>
-                                </select>
+                                <select class="unit-select" id="unitH"><option value="10">cm</option><option value="1">mm</option></select>
                             </div>
                         </div>
                         <div class="form-item"><label>每卷支数</label><input class="cyber-input" id="qtyRoll" type="text" inputmode="numeric" tabindex="17"></div>
@@ -655,7 +402,6 @@
                 </div>
             </div>
 
-            <!-- 右列：结果 + 键盘 + 皮肤 + 天气 -->
             <div class="col-result-keypad">
                 <div class="cyber-panel result-box">
                     <div class="panel-tag">③ 核算结果</div>
@@ -699,9 +445,8 @@
                     </div>
                 </div>
 
-                <!-- 天气时钟 -->
+                <!-- 天气时钟（紧凑版：无 panel-tag） -->
                 <div class="cyber-panel animation-panel weather-panel">
-                    <div class="panel-tag" style="margin-bottom: 8px;">🕐 天气时钟</div>
                     <div class="wc-body">
                         <canvas id="weatherCanvas" width="80" height="80" title="点击切换天气"></canvas>
                         <div class="wc-info">
@@ -709,6 +454,23 @@
                             <div class="wc-date" id="wcDate">--</div>
                             <div class="wc-cond is-loading" id="wcCond">初始化</div>
                         </div>
+                    </div>
+                    <button type="button" class="city-toggle" id="cityToggle" aria-expanded="false">
+                        <span id="cityToggleLabel">📍 切换城市</span>
+                        <span class="city-toggle-arrow">▼</span>
+                    </button>
+                    <div class="city-panel-body" id="cityPanelBody" hidden>
+                        <div class="city-picker" id="cityPicker">
+                            <select id="provinceSelect" disabled><option>加载中…</option></select>
+                            <select id="citySelect" disabled><option>市</option></select>
+                            <select id="countySelect" disabled><option>区/县</option></select>
+                        </div>
+                        <div class="manual-city-bar">
+                            <input type="text" id="cityInput" placeholder="或直接搜索，如 睢宁县" autocomplete="off" maxlength="30">
+                            <button id="citySearchBtn" type="button">搜索</button>
+                            <button id="cityAutoBtn" type="button" title="恢复自动定位">📍 自动</button>
+                        </div>
+                        <div class="city-results" id="cityResults"></div>
                     </div>
                 </div>
             </div>
@@ -724,13 +486,12 @@
             let capType = 'round';
             let boxType = 'regular';
             const bowH = document.getElementById('bowH');
-            const allInputsList = Array.from(document.querySelectorAll('.cyber-input:not([disabled])'));
+            const allInputsList = Array.from(document.querySelectorAll('.cyber-input'));
 
             ['unitL','unitW','unitH'].forEach(id => {
                 document.getElementById(id).addEventListener('change', calcAll);
             });
 
-            // 切换按钮
             document.getElementById('inputWrap').addEventListener('click', function(e) {
                 const target = e.target;
                 if (!target.classList.contains('cyber-btn')) return;
@@ -744,23 +505,19 @@
                     capType = type;
                     if (capType === 'bow') bowH.disabled = false;
                     else { bowH.disabled = true; bowH.value = ''; }
-                } else if (key === 'box') {
-                    boxType = type;
-                }
+                } else if (key === 'box') boxType = type;
                 calcAll();
             });
 
-            // 输入框事件
             allInputsList.forEach(inp => {
-                inp.addEventListener('focus', () => activeInput = inp);
+                inp.addEventListener('focus', () => { if (inp.disabled) return; activeInput = inp; });
                 inp.addEventListener('input', calcAll);
                 inp.addEventListener('keydown', e => { if (e.key === 'Enter') doEnterFunc(); });
             });
 
-            // 数字键盘
             document.querySelectorAll('.keypad-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    if (!activeInput) return;
+                    if (!activeInput || activeInput.disabled) return;
                     const key = this.dataset.key;
                     const val = activeInput.value;
                     if (key === 'clear') { activeInput.value = ''; calcAll(); return; }
@@ -777,11 +534,13 @@
                 calcAll();
                 if (!activeInput) return;
                 const idx = allInputsList.indexOf(activeInput);
-                const nextIdx = (idx + 1) % allInputsList.length;
-                allInputsList[nextIdx].focus();
+                if (idx < 0) return;
+                for (let step = 1; step <= allInputsList.length; step++) {
+                    const candidate = allInputsList[(idx + step) % allInputsList.length];
+                    if (!candidate.disabled) { candidate.focus(); return; }
+                }
             }
 
-            // 皮肤切换
             const skinBtns = document.querySelectorAll('.skin-btn');
             skinBtns.forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -791,7 +550,6 @@
                 });
             });
 
-            // DOM 引用
             const $ = id => document.getElementById(id);
             const dBaseIn = $('dBase'), LIn = $('L'), DcapIn = $('Dcap'), tCapIn = $('tCap');
             const bowHIn = $('bowH'), tipIn = $('tipAngle'), steelRhoIn = $('densitySteel');
@@ -805,7 +563,6 @@
             const boxNail = $('boxNailKg'), wireW = $('wireKg'), boxWt = $('boxKg');
             const rollOuterDia = $('rollOuterDia'), totalAll = $('finalTotal');
 
-            // 计算函数
             function calcBoxWeight() {
                 const rawL = parseFloat(boxLIn.value), rawW = parseFloat(boxWIn.value);
                 const rawH = parseFloat(boxHIn.value), gram = parseFloat(boxGramIn.value);
@@ -813,12 +570,10 @@
                 if (!(bL > 0 && bW > 0 && bH > 0 && gram > 0)) return null;
                 let cutLong, cutWide;
                 if (boxType === 'regular') {
-                    cutLong = (bL + bW) * 2 + 40;
-                    cutWide = bW + bH * 2;
+                    cutLong = (bL + bW) * 2 + 40; cutWide = bW + bH * 2;
                     return (cutLong * cutWide) / 1e6 * gram / 1000;
                 } else {
-                    cutLong = bW + bH * 2;
-                    cutWide = bL * 2 + bH * 2;
+                    cutLong = bW + bH * 2; cutWide = bL * 2 + bH * 2;
                     return (cutLong * cutWide) / 1e6 * gram / 1000 * 1.15;
                 }
             }
@@ -838,7 +593,7 @@
 
                 if ([dBase, L, Dcap, tCap, tipAng, rhoS, qty].some(isNaN)) return null;
                 if (dBase <= 0 || L <= 0 || Dcap <= 0 || tCap <= 0 || rhoS <= 0 || qty < 1 || tipAng <= 0 || tipAng >= 180) return null;
-                if (plateU < 0 || rhoZn <= 0) return null;
+                if (isNaN(plateU) || plateU < 0 || isNaN(rhoZn) || rhoZn <= 0) return null;
                 if (capType === 'bow' && (isNaN(bowHVal) || bowHVal <= 0 || bowHVal >= Dcap)) return null;
 
                 const r = dBase / 2, halfRad = tipAng * Math.PI / 360;
@@ -920,23 +675,33 @@
         })();
 
         /* =====================================================
-           ② 天气时钟（自动定位 + 缓存优化）
+           ② 天气时钟
            ===================================================== */
         (function() {
+            const DEBUG = false;
+            const log = (...a) => { if (DEBUG) console.log(...a); };
+            const warn = (...a) => { if (DEBUG) console.warn(...a); };
+
             const canvas = document.getElementById('weatherCanvas');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             const wcTimeEl = document.getElementById('wcTime');
             const wcDateEl = document.getElementById('wcDate');
             const wcCondEl = document.getElementById('wcCond');
+            const cityInput = document.getElementById('cityInput');
+            const citySearchBtn = document.getElementById('citySearchBtn');
+            const cityAutoBtn = document.getElementById('cityAutoBtn');
+            const cityResultsEl = document.getElementById('cityResults');
+            const provinceSelect = document.getElementById('provinceSelect');
+            const citySelect = document.getElementById('citySelect');
+            const countySelect = document.getElementById('countySelect');
+            const cityToggle = document.getElementById('cityToggle');
+            const cityToggleLabel = document.getElementById('cityToggleLabel');
+            const cityPanelBody = document.getElementById('cityPanelBody');
 
-            const S = 2, W = 40, H = 40;
+            const S = 2, W = 40;
 
-            // ---------- 像素绘制 ----------
-            function px(x, y, w, h, color) {
-                ctx.fillStyle = color;
-                ctx.fillRect(x * S, y * S, w * S, h * S);
-            }
+            function px(x, y, w, h, color) { ctx.fillStyle = color; ctx.fillRect(x * S, y * S, w * S, h * S); }
             function circle(cx, cy, r, color) {
                 ctx.fillStyle = color;
                 for (let dy = -r; dy <= r; dy++)
@@ -944,7 +709,6 @@
                         if (dx * dx + dy * dy <= r * r) ctx.fillRect((cx + dx) * S, (cy + dy) * S, S, S);
             }
 
-            // ---------- 状态 ----------
             const WEATHERS = ['sunny', 'cloudy', 'rain', 'snow'];
             const LABELS = { sunny: '☀️ 晴', cloudy: '⛅ 多云', rain: '🌧️ 小雨', snow: '❄️ 小雪' };
             const MONTH_DEFAULT = m => (m === 12 || m <= 2) ? 'snow' : (m <= 5 ? 'rain' : (m <= 8 ? 'sunny' : 'cloudy'));
@@ -952,12 +716,12 @@
             let weather = MONTH_DEFAULT(new Date().getMonth() + 1);
             let manualOverride = false;
             let weatherLoading = true;
-
+            let manualLocation = null;
             const realWeather = { temp: null, desc: '--', scene: 'sunny', city: '', updated: false };
 
-            // ---------- 缓存工具 ----------
-            const CACHE_KEY = 'nail_calc_weather_v1';
-            const CACHE_TTL = 30 * 60 * 1000; // 30 分钟
+            const CACHE_KEY = 'nail_calc_weather_v4';
+            const CACHE_TTL = 30 * 60 * 1000;
+            const MANUAL_LOC_KEY = 'nail_calc_weather_manual_loc_v3';
 
             function readCache() {
                 try {
@@ -969,15 +733,32 @@
                 } catch (e) { return null; }
             }
             function writeCache(data) {
-                try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ...data, ts: Date.now() })); }
-                catch (e) { /* 隐私模式可能禁用 localStorage */ }
+                try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ...data, ts: Date.now() })); } catch (e) {}
+            }
+            function readManualLocation() {
+                try {
+                    const raw = localStorage.getItem(MANUAL_LOC_KEY);
+                    if (!raw) return null;
+                    const obj = JSON.parse(raw);
+                    if (!obj || typeof obj.lat !== 'number' || typeof obj.lon !== 'number') return null;
+                    return obj;
+                } catch (e) { return null; }
+            }
+            function writeManualLocation(loc) {
+                try { localStorage.setItem(MANUAL_LOC_KEY, JSON.stringify(loc)); } catch (e) {}
+            }
+            function clearManualLocation() {
+                try { localStorage.removeItem(MANUAL_LOC_KEY); } catch (e) {}
             }
 
-            // ---------- 状态 → UI ----------
+            manualLocation = readManualLocation();
+            if (manualLocation && cityInput) cityInput.value = manualLocation.name || '';
+
             function refreshCondition() {
                 if (!wcCondEl) return;
                 if (realWeather.updated && realWeather.temp !== null && !manualOverride) {
-                    wcCondEl.textContent = `${realWeather.city ? realWeather.city + ' ' : ''}${realWeather.temp}°C ${realWeather.desc}`;
+                    const cityLabel = realWeather.city ? realWeather.city + ' ' : '';
+                    wcCondEl.textContent = `${cityLabel}${realWeather.temp}°C ${realWeather.desc}`;
                     wcCondEl.classList.remove('is-loading');
                     return;
                 }
@@ -995,20 +776,32 @@
                 wcCondEl.classList.remove('is-loading');
             }
 
-            // 若缓存中有数据，先展示出来
-            const cached = readCache();
-            if (cached) {
-                realWeather.city = cached.city;
-                realWeather.temp = cached.temp;
-                realWeather.desc = cached.desc;
-                realWeather.scene = cached.scene;
-                realWeather.updated = true;
-                weather = cached.scene;
+            function applyWeatherData(data) {
+                realWeather.city = data.city || '';
+                realWeather.temp = (typeof data.temp === 'number') ? data.temp : null;
+                realWeather.desc = data.desc || '--';
+                realWeather.scene = data.scene || 'sunny';
+                realWeather.updated = (typeof data.temp === 'number');
+                if (!manualOverride && realWeather.updated) weather = realWeather.scene;
                 weatherLoading = false;
+                refreshCondition();
             }
+
+            (function initFromCache() {
+                const cached = readCache();
+                if (!cached) return;
+                if (manualLocation) {
+                    if (cached.manual !== true) return;
+                    if (Math.abs(cached.lat - manualLocation.lat) > 0.01) return;
+                    if (Math.abs(cached.lon - manualLocation.lon) > 0.01) return;
+                } else {
+                    if (cached.manual === true) return;
+                }
+                applyWeatherData(cached);
+            })();
+
             refreshCondition();
 
-            // 点击切换
             canvas.addEventListener('click', () => {
                 manualOverride = true;
                 const i = WEATHERS.indexOf(weather);
@@ -1016,22 +809,20 @@
                 refreshCondition();
             });
 
-            // ---------- WMO 映射 ----------
             const WMO_MAP = {
-                0: { text: '晴', scene: 'sunny' }, 1: { text: '基本晴朗', scene: 'sunny' },
-                2: { text: '多云', scene: 'cloudy' }, 3: { text: '阴', scene: 'cloudy' },
-                45: { text: '雾', scene: 'cloudy' }, 48: { text: '冻雾', scene: 'cloudy' },
-                51: { text: '小毛毛雨', scene: 'rain' }, 53: { text: '毛毛雨', scene: 'rain' }, 55: { text: '大毛毛雨', scene: 'rain' },
-                61: { text: '小雨', scene: 'rain' }, 63: { text: '中雨', scene: 'rain' }, 65: { text: '大雨', scene: 'rain' },
-                66: { text: '冻雨', scene: 'rain' }, 67: { text: '强冻雨', scene: 'rain' },
-                71: { text: '小雪', scene: 'snow' }, 73: { text: '中雪', scene: 'snow' }, 75: { text: '大雪', scene: 'snow' }, 77: { text: '米雪', scene: 'snow' },
-                80: { text: '阵雨', scene: 'rain' }, 81: { text: '中阵雨', scene: 'rain' }, 82: { text: '强阵雨', scene: 'rain' },
-                85: { text: '阵雪', scene: 'snow' }, 86: { text: '强阵雪', scene: 'snow' },
-                95: { text: '雷阵雨', scene: 'rain' }, 96: { text: '雷阵雨伴冰雹', scene: 'rain' }, 99: { text: '强雷阵雨伴冰雹', scene: 'rain' }
+                0:{text:'晴',scene:'sunny'},1:{text:'基本晴朗',scene:'sunny'},
+                2:{text:'多云',scene:'cloudy'},3:{text:'阴',scene:'cloudy'},
+                45:{text:'雾',scene:'cloudy'},48:{text:'冻雾',scene:'cloudy'},
+                51:{text:'小毛毛雨',scene:'rain'},53:{text:'毛毛雨',scene:'rain'},55:{text:'大毛毛雨',scene:'rain'},
+                61:{text:'小雨',scene:'rain'},63:{text:'中雨',scene:'rain'},65:{text:'大雨',scene:'rain'},
+                66:{text:'冻雨',scene:'rain'},67:{text:'强冻雨',scene:'rain'},
+                71:{text:'小雪',scene:'snow'},73:{text:'中雪',scene:'snow'},75:{text:'大雪',scene:'snow'},77:{text:'米雪',scene:'snow'},
+                80:{text:'阵雨',scene:'rain'},81:{text:'中阵雨',scene:'rain'},82:{text:'强阵雨',scene:'rain'},
+                85:{text:'阵雪',scene:'snow'},86:{text:'强阵雪',scene:'snow'},
+                95:{text:'雷阵雨',scene:'rain'},96:{text:'雷阵雨伴冰雹',scene:'rain'},99:{text:'强雷阵雨伴冰雹',scene:'rain'}
             };
             const wmoToChinese = code => WMO_MAP[code] || { text: '多云', scene: 'cloudy' };
 
-            // ---------- 工具 ----------
             function fetchTimeout(url, ms) {
                 return new Promise((resolve, reject) => {
                     const timer = setTimeout(() => reject(new Error('请求超时')), ms);
@@ -1041,64 +832,43 @@
                 });
             }
 
-            // ---------- 定位策略 1：浏览器原生 ----------
             function locateByBrowser() {
                 return new Promise((resolve, reject) => {
                     if (!navigator.geolocation) return reject(new Error('浏览器不支持定位'));
                     const timer = setTimeout(() => reject(new Error('浏览器定位超时')), 8000);
                     navigator.geolocation.getCurrentPosition(
-                        pos => {
-                            clearTimeout(timer);
-                            resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, city: '' });
-                        },
-                        err => {
-                            clearTimeout(timer);
-                            reject(new Error('浏览器定位被拒绝: ' + err.message));
-                        },
+                        pos => { clearTimeout(timer); resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, city: '' }); },
+                        err => { clearTimeout(timer); reject(new Error('浏览器定位被拒绝: ' + err.message)); },
                         { timeout: 8000, maximumAge: 600000, enableHighAccuracy: false }
                     );
                 });
             }
 
-            // ---------- 定位策略 2：IP 定位 ----------
             async function locateByIP() {
                 const services = [
-                    {
-                        name: 'ipapi.co',
-                        fn: async () => {
-                            const r = await fetchTimeout('https://ipapi.co/json/', 5000);
-                            if (!r.ok) throw new Error('HTTP ' + r.status);
-                            const d = await r.json();
-                            if (!d.latitude || !d.longitude) throw new Error('无坐标');
-                            return { lat: d.latitude, lon: d.longitude, city: d.city || d.region || '' };
-                        }
-                    },
-                    {
-                        name: 'ipwho.is',
-                        fn: async () => {
-                            const r = await fetchTimeout('https://ipwho.is/', 5000);
-                            if (!r.ok) throw new Error('HTTP ' + r.status);
-                            const d = await r.json();
-                            if (!d.success || !d.latitude) throw new Error('无坐标');
-                            return { lat: d.latitude, lon: d.longitude, city: d.city || '' };
-                        }
-                    }
+                    { name: 'ipapi.co', fn: async () => {
+                        const r = await fetchTimeout('https://ipapi.co/json/', 5000);
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
+                        const d = await r.json();
+                        if (!d.latitude || !d.longitude) throw new Error('无坐标');
+                        return { lat: d.latitude, lon: d.longitude, city: d.city || d.region || '' };
+                    }},
+                    { name: 'ipwho.is', fn: async () => {
+                        const r = await fetchTimeout('https://ipwho.is/', 5000);
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
+                        const d = await r.json();
+                        if (!d.success || !d.latitude) throw new Error('无坐标');
+                        return { lat: d.latitude, lon: d.longitude, city: d.city || '' };
+                    }}
                 ];
                 let lastErr = null;
                 for (const s of services) {
-                    try {
-                        const loc = await s.fn();
-                        console.log(`[定位] ${s.name} 成功:`, loc);
-                        return loc;
-                    } catch (e) {
-                        lastErr = e;
-                        console.warn(`[定位] ${s.name} 失败:`, e.message);
-                    }
+                    try { const loc = await s.fn(); return loc; }
+                    catch (e) { lastErr = e; warn(`[定位] ${s.name} 失败:`, e.message); }
                 }
                 throw lastErr || new Error('所有 IP 定位服务均失败');
             }
 
-            // ---------- 反向地理编码 ----------
             async function reverseGeocode(lat, lon) {
                 try {
                     const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh`;
@@ -1109,26 +879,20 @@
                 } catch { return ''; }
             }
 
-            // ---------- 综合定位 ----------
             async function autoLocate() {
                 try {
                     const loc = await locateByBrowser();
-                    console.log('[定位] 使用浏览器原生定位');
                     if (!loc.city) loc.city = await reverseGeocode(loc.lat, loc.lon);
                     return loc;
-                } catch (e) { console.warn('[定位]', e.message); }
-
+                } catch (e) { warn('[定位]', e.message); }
                 try {
                     const loc = await locateByIP();
                     if (!loc.city) loc.city = await reverseGeocode(loc.lat, loc.lon);
                     return loc;
-                } catch (e) { console.warn('[定位]', e.message); }
-
-                console.warn('[定位] 全部失败，使用默认坐标（北京）');
+                } catch (e) { warn('[定位]', e.message); }
                 return { lat: 39.9042, lon: 116.4074, city: '北京' };
             }
 
-            // ---------- 天气 API ----------
             async function fetchWeather(lat, lon) {
                 const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`;
                 const r = await fetchTimeout(url, 6000);
@@ -1138,36 +902,47 @@
                 return data.current_weather;
             }
 
-            // ---------- 主流程 ----------
-            async function loadRealWeather() {
-                // 若缓存有效，直接跳过网络请求
-                const cacheNow = readCache();
-                if (cacheNow) {
-                    console.log('[天气] 使用缓存:', cacheNow);
-                    weatherLoading = false;
-                    refreshCondition();
-                    return;
+            async function loadRealWeather(force) {
+                if (!force) {
+                    const cacheNow = readCache();
+                    if (cacheNow) {
+                        let match = false;
+                        if (manualLocation) {
+                            match = cacheNow.manual === true &&
+                                Math.abs(cacheNow.lat - manualLocation.lat) < 0.01 &&
+                                Math.abs(cacheNow.lon - manualLocation.lon) < 0.01;
+                        } else {
+                            match = cacheNow.manual !== true;
+                        }
+                        if (match) { applyWeatherData(cacheNow); return; }
+                    }
                 }
+                weatherLoading = true;
+                refreshCondition();
                 try {
-                    const loc = await autoLocate();
+                    let loc;
+                    if (manualLocation) {
+                        loc = { lat: manualLocation.lat, lon: manualLocation.lon,
+                                city: manualLocation.name || manualLocation.region || '' };
+                    } else {
+                        loc = await autoLocate();
+                    }
                     const cw = await fetchWeather(loc.lat, loc.lon);
                     const mapped = wmoToChinese(cw.weathercode);
-
                     realWeather.city = loc.city;
                     realWeather.temp = Math.round(cw.temperature);
                     realWeather.desc = mapped.text;
                     realWeather.scene = mapped.scene;
                     realWeather.updated = true;
-
                     writeCache({
-                        city: loc.city, temp: realWeather.temp,
+                        lat: loc.lat, lon: loc.lon, manual: !!manualLocation,
+                        city: realWeather.city, temp: realWeather.temp,
                         desc: realWeather.desc, scene: realWeather.scene
                     });
-
                     if (!manualOverride) weather = mapped.scene;
-                    console.log(`[天气] ${loc.city} ${realWeather.temp}°C ${mapped.text} (code=${cw.weathercode})`);
+                    log(`[天气] ${loc.city} ${realWeather.temp}°C ${mapped.text}`);
                 } catch (e) {
-                    console.warn('[天气] 获取失败:', e.message);
+                    warn('[天气] 获取失败:', e.message);
                     realWeather.updated = false;
                     if (!manualOverride) weather = MONTH_DEFAULT(new Date().getMonth() + 1);
                 } finally {
@@ -1176,7 +951,392 @@
                 }
             }
 
-            // ---------- 场景绘制 ----------
+            /* 折叠面板 */
+            let cityPickerLoaded = false;
+            cityToggle.addEventListener('click', () => {
+                const isOpen = !cityPanelBody.hidden;
+                if (isOpen) {
+                    cityPanelBody.hidden = true;
+                    cityToggle.classList.remove('expanded');
+                    cityToggle.setAttribute('aria-expanded', 'false');
+                    cityToggleLabel.textContent = '📍 切换城市';
+                } else {
+                    cityPanelBody.hidden = false;
+                    cityToggle.classList.add('expanded');
+                    cityToggle.setAttribute('aria-expanded', 'true');
+                    cityToggleLabel.textContent = '📍 收起城市选择';
+                    if (!cityPickerLoaded) {
+                        cityPickerLoaded = true;
+                        initCityPicker();
+                    }
+                }
+            });
+
+            /* 三级联动 */
+            const CDN_SOURCES = [
+                'https://cdn.jsdelivr.net/npm/china-division@2.7.0/dist/pcas-code.json',
+                'https://unpkg.com/china-division@2.7.0/dist/pcas-code.json'
+            ];
+            let divisionData = null;
+
+            function fillSelect(sel, items, placeholder) {
+                sel.innerHTML = '';
+                const ph = document.createElement('option');
+                ph.value = ''; ph.textContent = placeholder;
+                sel.appendChild(ph);
+                items.forEach(it => {
+                    const opt = document.createElement('option');
+                    opt.value = it.code; opt.textContent = it.name;
+                    sel.appendChild(opt);
+                });
+            }
+
+            async function initCityPicker() {
+                provinceSelect.innerHTML = '<option>加载中…</option>';
+                provinceSelect.disabled = true;
+                let lastError = null;
+                for (const url of CDN_SOURCES) {
+                    try {
+                        log('[三级联动] 尝试 CDN:', url);
+                        const r = await fetchTimeout(url, 12000);
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
+                        const data = await r.json();
+                        if (!Array.isArray(data) || !data.length) throw new Error('数据格式异常');
+                        divisionData = data;
+                        fillSelect(provinceSelect, divisionData, '省/直辖市');
+                        provinceSelect.disabled = false;
+                        log('[三级联动] 加载成功，共', divisionData.length, '个省级区划');
+                        return;
+                    } catch (e) {
+                        lastError = e;
+                        warn('[三级联动] 源失败:', url, e.message);
+                    }
+                }
+                provinceSelect.innerHTML = '<option>加载失败</option>';
+                provinceSelect.disabled = true;
+                if (cityInput) cityInput.placeholder = 'CDN 加载失败，请直接输入城市名（如 睢宁县）';
+                warn('[三级联动] 所有 CDN 源均失败:', lastError && lastError.message);
+            }
+
+            provinceSelect.addEventListener('change', () => {
+                const pCode = provinceSelect.value;
+                if (!pCode || !divisionData) {
+                    fillSelect(citySelect, [], '市');
+                    fillSelect(countySelect, [], '区/县');
+                    citySelect.disabled = true;
+                    countySelect.disabled = true;
+                    return;
+                }
+                const province = divisionData.find(p => p.code === pCode);
+                const cities = (province && province.children) || [];
+                fillSelect(citySelect, cities, '市');
+                fillSelect(countySelect, [], '区/县');
+                citySelect.disabled = false;
+                countySelect.disabled = true;
+            });
+
+            citySelect.addEventListener('change', () => {
+                const pCode = provinceSelect.value;
+                const cCode = citySelect.value;
+                if (!cCode || !divisionData) {
+                    fillSelect(countySelect, [], '区/县');
+                    countySelect.disabled = true;
+                    return;
+                }
+                const province = divisionData.find(p => p.code === pCode);
+                const city = province.children.find(c => c.code === cCode);
+                const counties = (city && city.children) || [];
+                fillSelect(countySelect, counties, '区/县');
+                countySelect.disabled = false;
+            });
+
+            countySelect.addEventListener('change', () => {
+                const dCode = countySelect.value;
+                if (!dCode || !divisionData) return;
+                const pCode = provinceSelect.value;
+                const cCode = citySelect.value;
+                const province = divisionData.find(p => p.code === pCode);
+                const city = province.children.find(c => c.code === cCode);
+                const county = city.children.find(d => d.code === dCode);
+                selectCityByNames(province.name, city.name, county.name, county.code);
+            });
+
+            /* ★ 通过 adcode 从 DataV 获取县中心坐标 */
+            async function geocodeByAdcode(adcode) {
+                const url = `https://geo.datav.aliyun.com/areas_v3/bound/${adcode}.json`;
+                const r = await fetchTimeout(url, 6000);
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                const data = await r.json();
+                if (!data || !data.features || !data.features.length) throw new Error('无数据');
+                const props = data.features[0].properties || {};
+                const center = props.center || props.centroid;
+                if (!center || center.length !== 2) throw new Error('无中心点');
+                return { lat: center[1], lon: center[0] };
+            }
+
+            /* Nominatim 兜底（严格校验县名） */
+            async function geocodeByNames(province, city, county) {
+                const queries = [
+                    `${county} ${city} ${province}`,
+                    `${county} ${province}`,
+                    `${county} ${city}`,
+                    county
+                ];
+                for (const q of queries) {
+                    try {
+                        const url = 'https://nominatim.openstreetmap.org/search' +
+                            '?format=json&accept-language=zh-CN,zh&countrycodes=cn' +
+                            '&limit=5&addressdetails=1&q=' + encodeURIComponent(q);
+                        const r = await fetchTimeout(url, 6000);
+                        if (!r.ok) continue;
+                        const data = await r.json();
+                        if (!Array.isArray(data) || !data.length) continue;
+                        const target = data.find(item => {
+                            const addr = item.address || {};
+                            const candidates = [addr.county, addr.city_district, addr.district,
+                                                addr.town, addr.village, addr.municipality].filter(Boolean);
+                            if (candidates.some(x => x.includes(county) || county.includes(x))) return true;
+                            return (item.display_name || '').includes(county);
+                        });
+                        if (!target) continue;
+                        return { lat: parseFloat(target.lat), lon: parseFloat(target.lon) };
+                    } catch (e) { warn('[地理编码]', q, e.message); }
+                }
+                throw new Error('Nominatim 无法定位「' + county + '」');
+            }
+
+            async function selectCityByNames(provinceName, cityName, countyName, adcode) {
+                manualOverride = false;
+                if (wcCondEl) {
+                    wcCondEl.textContent = '定位中';
+                    wcCondEl.classList.add('is-loading');
+                }
+                let coords = null;
+                if (adcode) {
+                    try {
+                        coords = await geocodeByAdcode(adcode);
+                        log('[定位] DataV 成功:', adcode, coords);
+                    } catch (e) { warn('[DataV]', e.message); }
+                }
+                if (!coords) {
+                    try {
+                        coords = await geocodeByNames(provinceName, cityName, countyName);
+                        log('[定位] Nominatim 成功:', countyName, coords);
+                    } catch (e) { warn('[Nominatim]', e.message); }
+                }
+                if (!coords) {
+                    if (wcCondEl) {
+                        wcCondEl.textContent = '定位失败';
+                        wcCondEl.classList.remove('is-loading');
+                    }
+                    showResults('<div class="city-result-item">无法定位「' + countyName +
+                        '」，请改用搜索框输入（如「' + countyName + '」）</div>');
+                    return;
+                }
+                manualLocation = {
+                    lat: coords.lat, lon: coords.lon,
+                    name: countyName,
+                    region: [provinceName, cityName].filter(Boolean).join(' ')
+                };
+                writeManualLocation(manualLocation);
+                if (cityInput) cityInput.value = countyName;
+                hideResults();
+                loadRealWeather(true);
+            }
+
+            /* 搜索框 */
+            function showResults(html) {
+                if (!cityResultsEl) return;
+                cityResultsEl.innerHTML = html;
+                cityResultsEl.classList.add('show');
+            }
+            function hideResults() {
+                if (!cityResultsEl) return;
+                cityResultsEl.classList.remove('show');
+                cityResultsEl.innerHTML = '';
+            }
+
+            function renderResults(results, errorMsg) {
+                if (!cityResultsEl) return;
+                cityResultsEl.innerHTML = '';
+                if (errorMsg) {
+                    const d = document.createElement('div');
+                    d.className = 'city-result-item';
+                    d.textContent = '搜索失败：' + errorMsg;
+                    cityResultsEl.appendChild(d);
+                    cityResultsEl.classList.add('show');
+                    return;
+                }
+                if (!results.length) {
+                    const d = document.createElement('div');
+                    d.className = 'city-result-item';
+                    const q = cityInput ? cityInput.value.trim() : '';
+                    d.textContent = '未找到「' + q + '」，试试加「区/县/市」后缀。';
+                    cityResultsEl.appendChild(d);
+                    cityResultsEl.classList.add('show');
+                    return;
+                }
+                results.forEach(r => {
+                    const item = document.createElement('div');
+                    item.className = 'city-result-item';
+                    const nameEl = document.createElement('div');
+                    nameEl.className = 'cr-name';
+                    nameEl.textContent = r.name || '';
+                    const seen = new Set();
+                    const regionParts = [r.admin1, r.admin2, r.admin3, r.country]
+                        .filter(Boolean).filter(x => x !== r.name)
+                        .filter(x => { if (seen.has(x)) return false; seen.add(x); return true; });
+                    const regionEl = document.createElement('div');
+                    regionEl.className = 'cr-region';
+                    regionEl.textContent = regionParts.join(' · ');
+                    item.appendChild(nameEl);
+                    item.appendChild(regionEl);
+                    item.addEventListener('click', () => selectCityFromSearch(r));
+                    cityResultsEl.appendChild(item);
+                });
+                cityResultsEl.classList.add('show');
+            }
+
+            function normalizeNominatim(item) {
+                const addr = item.address || {};
+                const name = addr.county || addr.city_district || addr.district ||
+                             addr.city || addr.town || addr.village || addr.municipality ||
+                             (item.display_name || '').split(',')[0].trim();
+                return {
+                    name: name,
+                    admin1: addr.state || addr.province || '',
+                    admin2: addr.city || addr.state_district || '',
+                    admin3: addr.county || addr.city_district || '',
+                    country: addr.country || '',
+                    latitude: parseFloat(item.lat),
+                    longitude: parseFloat(item.lon)
+                };
+            }
+
+            async function searchNominatim(query) {
+                const url = 'https://nominatim.openstreetmap.org/search' +
+                    '?format=json&accept-language=zh-CN,zh&countrycodes=cn' +
+                    '&limit=10&addressdetails=1&q=' + encodeURIComponent(query);
+                const r = await fetchTimeout(url, 6000);
+                if (!r.ok) throw new Error('Nominatim HTTP ' + r.status);
+                const data = await r.json();
+                if (!Array.isArray(data)) return [];
+                return data.map(normalizeNominatim).filter(x => x.name && !isNaN(x.latitude) && !isNaN(x.longitude));
+            }
+
+            async function searchOpenMeteo(query) {
+                const url = 'https://geocoding-api.open-meteo.com/v1/search?name=' +
+                    encodeURIComponent(query) + '&count=10&language=zh&format=json';
+                const r = await fetchTimeout(url, 6000);
+                if (!r.ok) throw new Error('Open-Meteo HTTP ' + r.status);
+                const data = await r.json();
+                return Array.isArray(data.results) ? data.results : [];
+            }
+
+            async function searchCity(query) {
+                const q = String(query || '').trim();
+                if (!q) return [];
+                try {
+                    const r = await searchNominatim(q);
+                    if (r.length) return r;
+                } catch (e) { warn('[搜索] Nominatim 原词失败:', e.message); }
+                if (!/[市区县镇乡街旗盟州]/.test(q)) {
+                    for (const sfx of ['区', '县', '市']) {
+                        try {
+                            const r = await searchNominatim(q + sfx);
+                            if (r.length) return r;
+                        } catch (e) { warn('[搜索] Nominatim ' + sfx + ' 失败:', e.message); }
+                    }
+                }
+                const fb = [q];
+                if (!/[市区县镇乡街旗盟州]/.test(q)) fb.push(q + '区', q + '县', q + '市');
+                for (const a of fb) {
+                    try {
+                        const r = await searchOpenMeteo(a);
+                        if (r.length) return r;
+                    } catch (e) { warn('[搜索] Open-Meteo 失败:', e.message); }
+                }
+                return [];
+            }
+
+            function selectCityFromSearch(r) {
+                manualOverride = false;
+                const name = r.name || '';
+                const seen = new Set();
+                const regionParts = [r.admin1, r.admin2, r.admin3]
+                    .filter(Boolean).filter(x => x !== name)
+                    .filter(x => { if (seen.has(x)) return false; seen.add(x); return true; });
+                manualLocation = {
+                    lat: r.latitude, lon: r.longitude,
+                    name: name, region: regionParts.join(' ')
+                };
+                writeManualLocation(manualLocation);
+                if (cityInput) cityInput.value = name;
+                syncPickerToManual(name);
+                hideResults();
+                loadRealWeather(true);
+            }
+
+            function syncPickerToManual(countyName) {
+                if (!divisionData || !countyName) return;
+                for (const p of divisionData) {
+                    if (!p.children) continue;
+                    for (const c of p.children) {
+                        if (!c.children) continue;
+                        const county = c.children.find(d => d.name === countyName);
+                        if (county) {
+                            fillSelect(provinceSelect, divisionData, '省/直辖市');
+                            provinceSelect.value = p.code;
+                            fillSelect(citySelect, p.children, '市');
+                            citySelect.value = c.code;
+                            fillSelect(countySelect, c.children, '区/县');
+                            countySelect.value = county.code;
+                            citySelect.disabled = false;
+                            countySelect.disabled = false;
+                            return;
+                        }
+                    }
+                }
+            }
+
+            async function doSearch() {
+                if (citySearchBtn.disabled) return;
+                const q = cityInput ? cityInput.value.trim() : '';
+                if (!q) { showResults('<div class="city-result-item">请输入城市或区县名称</div>'); return; }
+                citySearchBtn.disabled = true;
+                showResults('<div class="city-result-item">搜索中…</div>');
+                try {
+                    const results = await searchCity(q);
+                    renderResults(results);
+                } catch (e) {
+                    renderResults([], e.message);
+                } finally {
+                    citySearchBtn.disabled = false;
+                }
+            }
+
+            citySearchBtn.addEventListener('click', doSearch);
+            cityInput.addEventListener('keydown', e => {
+                if (e.key === 'Enter') { e.preventDefault(); doSearch(); }
+                if (e.key === 'Escape') hideResults();
+            });
+
+            cityAutoBtn.addEventListener('click', () => {
+                manualOverride = false;
+                manualLocation = null;
+                clearManualLocation();
+                if (cityInput) cityInput.value = '';
+                if (divisionData) fillSelect(provinceSelect, divisionData, '省/直辖市');
+                fillSelect(citySelect, [], '市');
+                fillSelect(countySelect, [], '区/县');
+                citySelect.disabled = true;
+                countySelect.disabled = true;
+                hideResults();
+                try { localStorage.removeItem(CACHE_KEY); } catch (e) {}
+                loadRealWeather(true);
+            });
+
+            /* 场景绘制 */
             const CLOUDS = [
                 { base: 0, speed: 2.0, y: 4 },
                 { base: 24, speed: 1.5, y: 10 },
@@ -1217,9 +1377,9 @@
             }
             function drawCloud(x, y, color, a) {
                 ctx.globalAlpha = a;
-                px(x+2, y,   4, 1, color);
+                px(x+2, y, 4, 1, color);
                 px(x+1, y+1, 7, 1, color);
-                px(x,   y+2,10, 1, color);
+                px(x, y+2, 10, 1, color);
                 px(x+1, y+3, 8, 1, color);
                 ctx.globalAlpha = 1;
             }
@@ -1243,7 +1403,6 @@
                 }
             }
 
-            // ---------- 时钟 ----------
             const WEEKDAYS = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
             let lastSec = -1;
             function updateClock(d) {
@@ -1259,7 +1418,6 @@
                 refreshCondition();
             }
 
-            // ---------- 主循环 ----------
             function render(now) {
                 const t = now / 1000;
                 const d = new Date();
@@ -1299,8 +1457,8 @@
             }
 
             requestAnimationFrame(render);
-            loadRealWeather();
-            setInterval(loadRealWeather, 30 * 60 * 1000);
+            loadRealWeather(false);
+            setInterval(() => loadRealWeather(false), 30 * 60 * 1000);
         })();
     </script>
 </body>
