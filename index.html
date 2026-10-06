@@ -26,9 +26,9 @@
         .col-input-all > .cyber-panel:last-of-type { flex: 1; }
         .col-input-all > .cyber-panel:last-of-type .pack-two-col { align-content: start; }
 
-        /* ===== 天气时钟（紧凑版） ===== */
+        /* ===== 天气时钟（紧凑 + 字号放大） ===== */
         .weather-panel { padding: 8px 10px !important; }
-        .wc-body { display: flex; align-items: center; gap: 8px; }
+        .wc-body { display: flex; align-items: center; gap: 10px; }
         #weatherCanvas {
             width: 56px; height: 56px; display: block; flex-shrink: 0;
             border-radius: 10px; cursor: pointer;
@@ -40,13 +40,16 @@
         .wc-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
         .wc-time {
             font-family: "Consolas", "SF Mono", "Courier New", monospace;
-            font-size: 20px; font-weight: 700; line-height: 1;
+            font-size: 22px; font-weight: 700; line-height: 1;
             letter-spacing: 0.5px; font-variant-numeric: tabular-nums;
         }
-        .wc-date { font-size: 10px; font-weight: 600; opacity: 0.72; letter-spacing: 0.2px; line-height: 1.2; }
-        .wc-cond {
-            font-size: 10px; font-weight: 700; opacity: 0.92;
+        .wc-date {
+            font-size: 11px; font-weight: 600; opacity: 0.78;
             letter-spacing: 0.2px; line-height: 1.2;
+        }
+        .wc-cond {
+            font-size: 12.5px; font-weight: 700; opacity: 0.95;
+            letter-spacing: 0.3px; line-height: 1.2;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .wc-cond.is-loading::after {
@@ -58,10 +61,10 @@
             50% { content: '··'; } 75% { content: '···'; } 100% { content: ''; }
         }
 
-        /* ===== 折叠按钮（薄版） ===== */
+        /* ===== 折叠按钮 ===== */
         .city-toggle {
-            width: 100%; margin-top: 4px; padding: 3px 8px;
-            font-size: 10px; font-weight: 600;
+            width: 100%; margin-top: 4px; padding: 4px 8px;
+            font-size: 11px; font-weight: 600;
             border: none; border-radius: 6px;
             background: rgba(127,127,127,0.12);
             color: inherit; cursor: pointer;
@@ -71,7 +74,7 @@
         }
         .city-toggle:hover { background: rgba(127,127,127,0.22); }
         .city-toggle:active { transform: scale(0.99); }
-        .city-toggle-arrow { transition: transform 0.25s ease; font-size: 8px; }
+        .city-toggle-arrow { transition: transform 0.25s ease; font-size: 9px; }
         .city-toggle.expanded .city-toggle-arrow { transform: rotate(180deg); }
         .city-panel-body { margin-top: 6px; overflow: hidden; }
         .city-panel-body[hidden] { display: none; }
@@ -94,10 +97,7 @@
         .city-picker select:disabled { opacity: 0.5; cursor: not-allowed; }
         .city-picker select:focus { border-color: rgba(9,132,227,0.6); }
 
-        .manual-city-bar {
-            display: flex; align-items: center; gap: 5px;
-            margin-top: 6px;
-        }
+        .manual-city-bar { display: flex; align-items: center; gap: 5px; margin-top: 6px; }
         .manual-city-bar input {
             flex: 1; min-width: 0; font-size: 10px; padding: 5px 8px;
             border-radius: 8px;
@@ -215,7 +215,7 @@
         body.style-retro98 .skin-preview-block { width: 100%; height: 5px; background: #808080; }
         body.style-retro98 .skin-btn.active .skin-preview-block { background: #000; }
         body.style-retro98 .error-box { background: #ffeeee; color: #c00; border: 2px solid #c00; padding: 6px 12px; margin-bottom: 10px; display: none; font-size: 12px; font-weight: 600; }
-        body.style-retro98 .city-toggle { background: #c0c0c0; color: #000; border: 2px solid #fff; border-color: #fff #808080 #808080 #fff; border-radius: 0; padding: 3px 8px; }
+        body.style-retro98 .city-toggle { background: #c0c0c0; color: #000; border: 2px solid #fff; border-color: #fff #808080 #808080 #fff; border-radius: 0; padding: 4px 8px; }
         body.style-retro98 .city-toggle:hover { background: #d0d0d0; }
         body.style-retro98 .city-toggle:active { border-color: #808080 #fff #fff #808080; }
         body.style-retro98 .city-picker select, body.style-retro98 .manual-city-bar input { background-color: #fff; border: 2px solid #808080; border-color: #808080 #fff #fff #808080; border-radius: 0; }
@@ -262,7 +262,7 @@
         body.style-clay .skin-btn.active .skin-preview-block { background: #fff; }
         body.style-clay .skin-preview-block { width: 100%; height: 6px; border-radius: 10px; background: #dccfc4; }
         body.style-clay .error-box { background: #fdf0ed; color: #d4746a; border: none; border-radius: 16px; padding: 8px 14px; margin-bottom: 10px; display: none; font-size: 12px; font-weight: 700; }
-        body.style-clay .city-toggle { background: #ffefe4; color: #4a3728; box-shadow: 0 3px 0 #dccfc4; padding: 3px 8px; border-radius: 10px; }
+        body.style-clay .city-toggle { background: #ffefe4; color: #4a3728; box-shadow: 0 3px 0 #dccfc4; padding: 4px 8px; border-radius: 10px; }
         body.style-clay .city-toggle:hover { background: #ffe4d4; }
         body.style-clay .city-toggle:active { transform: translateY(2px); box-shadow: 0 1px 0 #dccfc4; }
         body.style-clay .city-picker select, body.style-clay .manual-city-bar input { background-color: #fff; border: 2px solid #dccfc4; border-radius: 12px; box-shadow: 0 3px 0 #b8a898; }
@@ -307,7 +307,7 @@
         body.style-minimal .skin-btn.active .skin-preview-block { background: #fff; }
         body.style-minimal .skin-preview-block { width: 100%; height: 4px; border-radius: 4px; background: #dce0e6; transition: 0.2s; }
         body.style-minimal .error-box { background: #fde8e8; color: #d62828; border: 1.5px solid #f5d0d0; border-radius: 10px; padding: 8px 14px; margin-bottom: 10px; display: none; font-size: 12px; font-weight: 500; }
-        body.style-minimal .city-toggle { background: #f5f7fa; color: #2d6a4f; border: 1.5px solid #dce0e6; padding: 3px 8px; border-radius: 8px; }
+        body.style-minimal .city-toggle { background: #f5f7fa; color: #2d6a4f; border: 1.5px solid #dce0e6; padding: 4px 8px; border-radius: 8px; }
         body.style-minimal .city-toggle:hover { background: #e9edf2; }
         body.style-minimal .city-picker select, body.style-minimal .manual-city-bar input { background-color: #f5f7fa; border: 1.5px solid #dce0e6; border-radius: 8px; }
         body.style-minimal .manual-city-bar button { background: #f5f7fa; border: 1.5px solid #dce0e6; border-radius: 8px; color: #2d6a4f; }
@@ -327,8 +327,10 @@
             .head-title { font-size: 16px !important; }
             .keypad-grid { gap: 6px !important; }
             .keypad-btn { padding: 10px 0 !important; font-size: 14px !important; }
-            .wc-time { font-size: 18px !important; }
-            #weatherCanvas { width: 48px !important; height: 48px !important; }
+            .wc-time { font-size: 20px !important; }
+            .wc-date { font-size: 10px !important; }
+            .wc-cond { font-size: 11.5px !important; }
+            #weatherCanvas { width: 52px !important; height: 52px !important; }
             .city-picker { grid-template-columns: 1fr 1fr 1fr; }
             .city-picker select { font-size: 9px; padding: 4px 14px 4px 5px; }
         }
@@ -445,7 +447,6 @@
                     </div>
                 </div>
 
-                <!-- 天气时钟（紧凑版：无 panel-tag） -->
                 <div class="cyber-panel animation-panel weather-panel">
                     <div class="wc-body">
                         <canvas id="weatherCanvas" width="80" height="80" title="点击切换天气"></canvas>
@@ -675,7 +676,7 @@
         })();
 
         /* =====================================================
-           ② 天气时钟
+           ② 天气时钟（默认睢宁县 + 字体优化）
            ===================================================== */
         (function() {
             const DEBUG = false;
@@ -713,15 +714,25 @@
             const LABELS = { sunny: '☀️ 晴', cloudy: '⛅ 多云', rain: '🌧️ 小雨', snow: '❄️ 小雪' };
             const MONTH_DEFAULT = m => (m === 12 || m <= 2) ? 'snow' : (m <= 5 ? 'rain' : (m <= 8 ? 'sunny' : 'cloudy'));
 
+            /* ★ 默认位置：睢宁县 */
+            const DEFAULT_LOCATION = {
+                lat: 33.912,
+                lon: 117.944,
+                name: '睢宁县',
+                region: '江苏省 徐州市'
+            };
+
             let weather = MONTH_DEFAULT(new Date().getMonth() + 1);
             let manualOverride = false;
             let weatherLoading = true;
             let manualLocation = null;
             const realWeather = { temp: null, desc: '--', scene: 'sunny', city: '', updated: false };
 
-            const CACHE_KEY = 'nail_calc_weather_v4';
+            const CACHE_KEY = 'nail_calc_weather_v5';
             const CACHE_TTL = 30 * 60 * 1000;
-            const MANUAL_LOC_KEY = 'nail_calc_weather_manual_loc_v3';
+            const MANUAL_LOC_KEY = 'nail_calc_weather_manual_loc_v4';
+            /* 用户是否主动点过「自动」按钮：若为 true，则下次打开不再默认睢宁县 */
+            const PREFER_AUTO_KEY = 'nail_calc_weather_prefer_auto_v1';
 
             function readCache() {
                 try {
@@ -750,8 +761,24 @@
             function clearManualLocation() {
                 try { localStorage.removeItem(MANUAL_LOC_KEY); } catch (e) {}
             }
+            function readPreferAuto() {
+                try { return localStorage.getItem(PREFER_AUTO_KEY) === '1'; } catch (e) { return false; }
+            }
+            function writePreferAuto(v) {
+                try {
+                    if (v) localStorage.setItem(PREFER_AUTO_KEY, '1');
+                    else localStorage.removeItem(PREFER_AUTO_KEY);
+                } catch (e) {}
+            }
 
+            /* 初始化位置：优先读取用户保存的；若无且用户从未点过「自动」→ 默认睢宁县 */
             manualLocation = readManualLocation();
+            const preferAuto = readPreferAuto();
+            if (!manualLocation && !preferAuto) {
+                manualLocation = { ...DEFAULT_LOCATION };
+                writeManualLocation(manualLocation);
+                log('[初始化] 使用默认位置：睢宁县');
+            }
             if (manualLocation && cityInput) cityInput.value = manualLocation.name || '';
 
             function refreshCondition() {
@@ -809,17 +836,35 @@
                 refreshCondition();
             });
 
-            const WMO_MAP = {
-                0:{text:'晴',scene:'sunny'},1:{text:'基本晴朗',scene:'sunny'},
-                2:{text:'多云',scene:'cloudy'},3:{text:'阴',scene:'cloudy'},
-                45:{text:'雾',scene:'cloudy'},48:{text:'冻雾',scene:'cloudy'},
-                51:{text:'小毛毛雨',scene:'rain'},53:{text:'毛毛雨',scene:'rain'},55:{text:'大毛毛雨',scene:'rain'},
-                61:{text:'小雨',scene:'rain'},63:{text:'中雨',scene:'rain'},65:{text:'大雨',scene:'rain'},
-                66:{text:'冻雨',scene:'rain'},67:{text:'强冻雨',scene:'rain'},
-                71:{text:'小雪',scene:'snow'},73:{text:'中雪',scene:'snow'},75:{text:'大雪',scene:'snow'},77:{text:'米雪',scene:'snow'},
-                80:{text:'阵雨',scene:'rain'},81:{text:'中阵雨',scene:'rain'},82:{text:'强阵雨',scene:'rain'},
-                85:{text:'阵雪',scene:'snow'},86:{text:'强阵雪',scene:'snow'},
-                95:{text:'雷阵雨',scene:'rain'},96:{text:'雷阵雨伴冰雹',scene:'rain'},99:{text:'强雷阵雨伴冰雹',scene:'rain'}
+                        const WMO_MAP = {
+                0:  { text: '晴',            scene: 'sunny'  },
+                1:  { text: '晴间多云',      scene: 'sunny'  },
+                2:  { text: '多云',          scene: 'cloudy' },
+                3:  { text: '阴',            scene: 'cloudy' },
+                45: { text: '有雾',          scene: 'cloudy' },
+                48: { text: '冻雾',          scene: 'cloudy' },
+                51: { text: '毛毛雨',        scene: 'rain'   },
+                53: { text: '毛毛雨',        scene: 'rain'   },
+                55: { text: '浓毛毛雨',      scene: 'rain'   },
+                56: { text: '冻毛毛雨',      scene: 'rain'   },
+                57: { text: '浓冻毛毛雨',    scene: 'rain'   },
+                61: { text: '小雨',          scene: 'rain'   },
+                63: { text: '中雨',          scene: 'rain'   },
+                65: { text: '大雨',          scene: 'rain'   },
+                66: { text: '冻雨',          scene: 'rain'   },
+                67: { text: '强冻雨',        scene: 'rain'   },
+                71: { text: '小雪',          scene: 'snow'   },
+                73: { text: '中雪',          scene: 'snow'   },
+                75: { text: '大雪',          scene: 'snow'   },
+                77: { text: '米雪',          scene: 'snow'   },
+                80: { text: '阵雨',          scene: 'rain'   },
+                81: { text: '阵雨',          scene: 'rain'   },
+                82: { text: '强阵雨',        scene: 'rain'   },
+                85: { text: '阵雪',          scene: 'snow'   },
+                86: { text: '强阵雪',        scene: 'snow'   },
+                95: { text: '雷阵雨',        scene: 'rain'   },
+                96: { text: '雷阵雨伴冰雹',  scene: 'rain'   },
+                99: { text: '强雷阵雨伴冰雹', scene: 'rain'  }
             };
             const wmoToChinese = code => WMO_MAP[code] || { text: '多云', scene: 'cloudy' };
 
@@ -951,7 +996,6 @@
                 }
             }
 
-            /* 折叠面板 */
             let cityPickerLoaded = false;
             cityToggle.addEventListener('click', () => {
                 const isOpen = !cityPanelBody.hidden;
@@ -972,7 +1016,6 @@
                 }
             });
 
-            /* 三级联动 */
             const CDN_SOURCES = [
                 'https://cdn.jsdelivr.net/npm/china-division@2.7.0/dist/pcas-code.json',
                 'https://unpkg.com/china-division@2.7.0/dist/pcas-code.json'
@@ -1061,7 +1104,6 @@
                 selectCityByNames(province.name, city.name, county.name, county.code);
             });
 
-            /* ★ 通过 adcode 从 DataV 获取县中心坐标 */
             async function geocodeByAdcode(adcode) {
                 const url = `https://geo.datav.aliyun.com/areas_v3/bound/${adcode}.json`;
                 const r = await fetchTimeout(url, 6000);
@@ -1074,7 +1116,6 @@
                 return { lat: center[1], lon: center[0] };
             }
 
-            /* Nominatim 兜底（严格校验县名） */
             async function geocodeByNames(province, city, county) {
                 const queries = [
                     `${county} ${city} ${province}`,
@@ -1107,6 +1148,8 @@
 
             async function selectCityByNames(provinceName, cityName, countyName, adcode) {
                 manualOverride = false;
+                /* 用户主动选城市 → 取消「优先自动」标记 */
+                writePreferAuto(false);
                 if (wcCondEl) {
                     wcCondEl.textContent = '定位中';
                     wcCondEl.classList.add('is-loading');
@@ -1144,7 +1187,6 @@
                 loadRealWeather(true);
             }
 
-            /* 搜索框 */
             function showResults(html) {
                 if (!cityResultsEl) return;
                 cityResultsEl.innerHTML = html;
@@ -1261,6 +1303,7 @@
 
             function selectCityFromSearch(r) {
                 manualOverride = false;
+                writePreferAuto(false);
                 const name = r.name || '';
                 const seen = new Set();
                 const regionParts = [r.admin1, r.admin2, r.admin3]
@@ -1325,6 +1368,8 @@
                 manualOverride = false;
                 manualLocation = null;
                 clearManualLocation();
+                /* ★ 记录用户偏好自动：下次打开不再默认睢宁县 */
+                writePreferAuto(true);
                 if (cityInput) cityInput.value = '';
                 if (divisionData) fillSelect(provinceSelect, divisionData, '省/直辖市');
                 fillSelect(citySelect, [], '市');
@@ -1336,7 +1381,6 @@
                 loadRealWeather(true);
             });
 
-            /* 场景绘制 */
             const CLOUDS = [
                 { base: 0, speed: 2.0, y: 4 },
                 { base: 24, speed: 1.5, y: 10 },
